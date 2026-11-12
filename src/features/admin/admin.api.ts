@@ -1,0 +1,240 @@
+// admin.api.ts — admin console data hooks (users, content, committees, links, docs, wallets, apps, audit).
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, apiForm } from '@/lib/api-client';
+import { toast } from '@/lib/toast';
+import type { Paginated, SessionUser } from '@/types/api';
+import type { CommitteeMember, GovLink, PublicAnnouncement, Service } from '@/types/entities';
+
+const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+function readCookie(name: string) {
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1] ?? '') : null;
+}
+
+// ── Users / approvals ── (shape matches the backend SAFE_SELECT, not SessionUser)
+export interface AdminUser {
+  id: string;
+  fullName: string;
+  phoneNormalized: string;
+  emailNormalized: string | null;
+  role: SessionUser['role'];
+  accountStatus: SessionUser['accountStatus'];
+  centreName: string | null;
+  cscId: string | null;
+  rejectedReason?: string | null;
+  approvedAt?: string | null;
+  createdAt: string;
+}
+export function useAdminUsers(params: { status?: string; search?: string; page: number }) {
+  const qs = new URLSearchParams({ page: String(params.page), limit: '20' });
+  if (params.status) qs.set('status', params.status);
+  if (params.search) qs.set('search', params.search);
+  return useQuery({ queryKey: ['admin-users', params], queryFn: () => api<Paginated<AdminUser>>(`/admin/users?${qs}`), placeholderData: (p) => p });
+}
+export function useUserAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action, reason }: { id: string; action: 'approve' | 'reject' | 'suspend' | 'reactivate'; reason?: string }) =>
+      api(`/admin/users/${id}/${action}`, { method: 'POST', body: reason ? { reason } : undefined }),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+      const msg: Record<string, string> = {
+        approve: 'ಬಳಕೆದಾರ ಅನುಮೋದಿಸಲಾಗಿದೆ',
+        reject: 'ಅರ್ಜಿ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ',
+        suspend: 'ಖಾತೆ ಅಮಾನತುಗೊಳಿಸಲಾಗಿದೆ',
+        reactivate: 'ಖಾತೆ ಮರುಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ',
+      };
+      toast(msg[v.action] ?? 'ಪೂರ್ಣಗೊಂಡಿದೆ', 'success');
+    },
+  });
+}
+
+// ── Announcements ──
+export function useAdminAnnouncements(page: number) {
+  return useQuery({ queryKey: ['admin-ann', page], queryFn: () => api<Paginated<PublicAnnouncement>>(`/admin/announcements?page=${page}&limit=20`), placeholderData: (p) => p });
+}
+export function useAnnouncementMutations() {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-ann'] }); toast(msg, 'success'); };
+  return {
+    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api('/admin/announcements', { method: 'POST', body: b }), onSuccess: done('ಪ್ರಕಟಣೆ ಸೇರಿಸಲಾಗಿದೆ') }),
+    update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/announcements/${id}`, { method: 'PATCH', body }), onSuccess: done('ಪ್ರಕಟಣೆ ನವೀಕರಿಸಲಾಗಿದೆ') }),
+    archive: useMutation({ mutationFn: (id: string) => api(`/admin/announcements/${id}/archive`, { method: 'POST' }), onSuccess: done('ಪ್ರಕಟಣೆ ಆರ್ಕೈವ್ ಆಗಿದೆ') }),
+  };
+}
+
+// ── Committees ──
+export function useAdminCommittees() {
+  return useQuery({ queryKey: ['admin-committees'], queryFn: () => api<{ items: CommitteeMember[] }>('/admin/committees').then((r) => r.items) });
+}
+export function useCommitteeMutations() {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-committees'] }); toast(msg, 'success'); };
+  return {
+    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api('/admin/committees', { method: 'POST', body: b }), onSuccess: done('ಸಮಿತಿ ಸದಸ್ಯ ಸೇರಿಸಲಾಗಿದೆ') }),
+    update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/committees/${id}`, { method: 'PATCH', body }), onSuccess: done('ಸಮಿತಿ ಸದಸ್ಯ ನವೀಕರಿಸಲಾಗಿದೆ') }),
+    archive: useMutation({ mutationFn: (id: string) => api(`/admin/committees/${id}/archive`, { method: 'POST' }), onSuccess: done('ಸದಸ್ಯ ತೆಗೆದುಹಾಕಲಾಗಿದೆ') }),
+  };
+}
+
+// ── Government links ──
+export function useAdminLinks() {
+  return useQuery({ queryKey: ['admin-links'], queryFn: () => api<{ items: GovLink[] }>('/admin/government-links').then((r) => r.items) });
+}
+export function useLinkMutations() {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-links'] }); toast(msg, 'success'); };
+  return {
+    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api('/admin/government-links', { method: 'POST', body: b }), onSuccess: done('ಕೊಂಡಿ ಸೇರಿಸಲಾಗಿದೆ') }),
+    update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/government-links/${id}`, { method: 'PATCH', body }), onSuccess: done('ಕೊಂಡಿ ನವೀಕರಿಸಲಾಗಿದೆ') }),
+    deactivate: useMutation({ mutationFn: (id: string) => api(`/admin/government-links/${id}/deactivate`, { method: 'POST' }), onSuccess: done('ಕೊಂಡಿ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ') }),
+    reactivate: useMutation({ mutationFn: (id: string) => api(`/admin/government-links/${id}`, { method: 'PATCH', body: { isActive: true } }), onSuccess: done('ಕೊಂಡಿ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ') }),
+  };
+}
+
+// ── Service catalogue ──
+export function useAdminServices(page: number) {
+  return useQuery({ queryKey: ['admin-services', page], queryFn: () => api<Paginated<Service>>(`/admin/services?page=${page}&limit=50`), placeholderData: (p) => p });
+}
+export function useServiceMutations() {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-services'] }); toast(msg, 'success'); };
+  return {
+    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api('/admin/services', { method: 'POST', body: b }), onSuccess: done('ಸೇವೆ ಸೇರಿಸಲಾಗಿದೆ') }),
+    update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/services/${id}`, { method: 'PATCH', body }), onSuccess: done('ಸೇವೆ ನವೀಕರಿಸಲಾಗಿದೆ') }),
+    deactivate: useMutation({ mutationFn: (id: string) => api(`/admin/services/${id}/deactivate`, { method: 'POST' }), onSuccess: done('ಸೇವೆ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ') }),
+  };
+}
+
+// ── Documents (multipart upload) ──
+export interface AdminDocument { id: string; title: string; category: string | null; mimeType: string; sizeBytes: number; visibility: string; createdAt: string }
+export function useAdminDocuments() {
+  return useQuery({ queryKey: ['admin-docs'], queryFn: () => api<{ items: AdminDocument[] }>('/admin/documents').then((r) => r.items) });
+}
+export function useDocumentMutations() {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-docs'] }); toast(msg, 'success'); };
+  return {
+    upload: useMutation({
+      mutationFn: async (form: FormData) => {
+        await fetch(`${BASE}/api/v1/auth/csrf`, { credentials: 'include' });
+        const res = await fetch(`${BASE}/api/v1/admin/documents`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'x-csrf-token': readCookie('kscwc.csrf') ?? '' },
+          body: form,
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? 'Upload failed');
+        return res.json();
+      },
+      onSuccess: done('ದಾಖಲೆ ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ'),
+    }),
+    archive: useMutation({ mutationFn: (id: string) => api(`/admin/documents/${id}/archive`, { method: 'POST' }), onSuccess: done('ದಾಖಲೆ ಆರ್ಕೈವ್ ಆಗಿದೆ') }),
+  };
+}
+
+// ── Wallets ──
+export interface AdminWallet { id: string; balancePaise: number; user: { id: string; fullName: string; phoneNormalized: string; accountStatus: string } }
+export function useAdminWallets(params: { search?: string; page: number }) {
+  const qs = new URLSearchParams({ page: String(params.page), limit: '20' });
+  if (params.search) qs.set('search', params.search);
+  return useQuery({ queryKey: ['admin-wallets', params], queryFn: () => api<Paginated<AdminWallet>>(`/admin/wallets?${qs}`), placeholderData: (p) => p });
+}
+export function useWalletAdjust() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, ...body }: { userId: string; amountPaise: number; direction: 'CREDIT' | 'DEBIT'; reason: string }) =>
+      api(`/admin/wallets/${userId}/adjustments`, { method: 'POST', body }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-wallets'] }); toast('ವಾಲೆಟ್ ಹೊಂದಾಣಿಕೆ ಆಗಿದೆ', 'success'); },
+  });
+}
+
+// ── Applications ──
+export function useAdminApplications(kind: string, page: number) {
+  return useQuery({ queryKey: ['admin-apps', kind, page], queryFn: () => api<Paginated<Record<string, unknown>>>(`/admin/applications/${kind}?page=${page}&limit=20`), placeholderData: (p) => p });
+}
+export function useApplicationStatus(kind: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status, resolutionNote }: { id: string; status: string; resolutionNote?: string }) =>
+      api(`/admin/applications/${kind}/${id}/status`, { method: 'POST', body: { status, resolutionNote } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-apps', kind] }); toast('ಅರ್ಜಿ ಸ್ಥಿತಿ ನವೀಕರಿಸಲಾಗಿದೆ', 'success'); },
+  });
+}
+
+// ── Audit ──
+export function useAuditLogs(page: number) {
+  return useQuery({ queryKey: ['admin-audit', page], queryFn: () => api<Paginated<Record<string, unknown>>>(`/admin/audit-logs?page=${page}&limit=30`), placeholderData: (p) => p });
+}
+
+// ── Manual UPI top-ups + payment QR ──
+export interface AdminManualTopup {
+  id: string;
+  amountPaise: number;
+  utrNumber: string;
+  note: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewNote: string | null;
+  creditedAmountPaise: number | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  user: { fullName: string; phone: string; centreName: string | null };
+  hasScreenshot: boolean;
+}
+
+export function useAdminManualTopups(status: string, page: number) {
+  const qs = new URLSearchParams({ page: String(page), limit: '20' });
+  if (status) qs.set('status', status);
+  return useQuery({
+    queryKey: ['admin-manual-topups', status, page],
+    queryFn: () => api<Paginated<AdminManualTopup>>(`/admin/manual-topups?${qs}`),
+    placeholderData: (p) => p,
+  });
+}
+
+export function useManualTopupReview() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['admin-manual-topups'] });
+  return {
+    approve: useMutation({
+      mutationFn: ({ id, amountPaise, note }: { id: string; amountPaise?: number; note?: string }) =>
+        api(`/admin/manual-topups/${id}/approve`, { method: 'POST', body: { amountPaise, note } }),
+      onSuccess: () => { inv(); toast('ಟಾಪ್-ಅಪ್ ಅನುಮೋದಿಸಿ ವಾಲೆಟ್‌ಗೆ ಜಮೆ ಮಾಡಲಾಗಿದೆ', 'success'); },
+    }),
+    reject: useMutation({
+      mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+        api(`/admin/manual-topups/${id}/reject`, { method: 'POST', body: { reason } }),
+      onSuccess: () => { inv(); toast('ವಿನಂತಿ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ', 'success'); },
+    }),
+  };
+}
+
+export interface PaymentQrConfig { upiId: string; payeeName: string; note: string | null; imageUrl: string }
+
+export function usePaymentQrConfig() {
+  return useQuery({ queryKey: ['payment-qr'], queryFn: () => api<PaymentQrConfig>('/payment-qr'), retry: false });
+}
+
+export function useSetPaymentQr() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (form: FormData) => apiForm<PaymentQrConfig>('/admin/payment-qr', form, 'PUT'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payment-qr'] });
+      qc.invalidateQueries({ queryKey: ['payment-qr-image'] });
+      toast('ಪಾವತಿ QR ಉಳಿಸಲಾಗಿದೆ', 'success');
+    },
+  });
+}
+
+// ── FID official portal link ──
+export function useSetFidPortalLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (url: string) => api<{ url: string }>('/admin/fid/portal-link', { method: 'PUT', body: { url } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fid-portal-link'] });
+      toast('ಎಫ್‌ಐಡಿ ಪೋರ್ಟಲ್ ಲಿಂಕ್ ಉಳಿಸಲಾಗಿದೆ', 'success');
+    },
+  });
+}

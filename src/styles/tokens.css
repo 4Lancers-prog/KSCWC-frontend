@@ -1,0 +1,18 @@
+/* tokens.css — design tokens as CSS variables (mirror of tailwind.config colors).
+   Kept for non-Tailwind consumers (e.g. the FID card preview, print styles).
+   Palette derived from the KSCCA emblem: deep royal navy, metallic gold, Karnataka red/yellow. */
+:root {
+  --navy-900: #0a2150;
+  --navy-700: #123872;
+  --navy-500: #2156b4;
+  --gold-500: #dca81f;
+  --gold-400: #efc23f;
+  --kred: #e23b2e;
+  --kyellow: #ffcc00;
+  --mist: #f3f6fc;
+  --line: #e2e8f0;
+  --ink: #0f172a;
+  --slate2: #475569;
+  --success: #15803d;
+  --danger: #b91c1c;
+}

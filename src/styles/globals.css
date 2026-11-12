@@ -1,0 +1,70 @@
+/* globals.css — base layer. Self-hosted fonts imported in main.tsx. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white text-ink font-sans antialiased;
+    font-feature-settings: 'kern';
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-navy-900;
+    letter-spacing: -0.01em;
+  }
+  /* Visible keyboard focus everywhere (accessibility floor). */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.gold.500');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The one recurring structural motif: a thin gold rule. */
+  .gold-rule {
+    height: 3px;
+    width: 56px;
+    @apply bg-gold-500 rounded-full;
+  }
+  .container-content {
+    @apply mx-auto w-full max-w-content px-4 sm:px-6;
+  }
+  /* Cards that gently lift on hover. */
+  .hover-lift {
+    @apply transition duration-200;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-0.5 shadow-lift;
+  }
+  /* Karnataka flag accent — a thin red/gold band used at the very top of the masthead. */
+  .flag-stripe {
+    height: 3px;
+    background: linear-gradient(90deg, theme('colors.kred') 0 50%, theme('colors.kyellow') 50% 100%);
+  }
+}
+
+/* ── Tasteful motion (all auto-disabled under prefers-reduced-motion by the base layer) ── */
+@keyframes kscwc-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes kscwc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-up { animation: kscwc-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in { animation: kscwc-fade-in 0.4s ease-out both; }
