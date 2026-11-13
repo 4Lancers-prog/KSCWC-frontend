@@ -1,0 +1,16 @@
+// wrangler.jsonc — Cloudflare Workers deployment: static site from ./dist + /api proxy (worker/index.js).
+// Cloudflare build settings:  Build command: npm run build   Deploy command: npx wrangler deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kscwc-frontend",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // API_ORIGIN / PROXY_SHARED_SECRET are set in the Cloudflare dashboard; keep them across deploys.
+  "keep_vars": true
+}
