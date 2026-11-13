@@ -1,0 +1,7 @@
+# _redirects — Netlify / Cloudflare Pages.
+# 1) Recommended: proxy the API through this same domain so cookies are first-party
+#    (then leave VITE_API_BASE_URL empty and keep COOKIE_SAMESITE=lax on the API).
+#    Replace the URL with your API's address and uncomment:
+# /api/*  https://YOUR-API-HOST/api/:splat  200
+# 2) SPA fallback: every other path serves index.html so /admin, /app/wallet etc. load on refresh.
+/*  /index.html  200

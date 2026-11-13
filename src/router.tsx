@@ -48,6 +48,9 @@ import { ManualTopups } from '@/features/admin/pages/ManualTopups';
 import { Settings as AdminSettings } from '@/features/admin/pages/Settings';
 import { ApplicationsAdmin } from '@/features/admin/pages/ApplicationsAdmin';
 import { AuditLogs } from '@/features/admin/pages/AuditLogs';
+import { AdminCustomers } from '@/features/admin/pages/AdminCustomers';
+import { AdminMfaSetupPage } from '@/features/auth/pages/AdminMfaSetupPage';
+import { MyApplicationsPage } from '@/features/applications/pages/MyApplicationsPage';
 import { NotFoundPage } from '@/features/public-content/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -70,6 +73,7 @@ export const router = createBrowserRouter([
   },
   { path: '/login', element: <LoginPage /> },
   { path: '/admin/login', element: <AdminLoginPage /> },
+  { path: '/admin/mfa-setup', element: <AdminMfaSetupPage /> },
   { path: '/register', element: <SignUpPage /> },
   { path: '/pending', element: <PendingApprovalPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
@@ -97,6 +101,7 @@ export const router = createBrowserRouter([
           { path: 'fid/history', element: <FidHistoryPage /> },
           { path: 'tools/b2-photo', element: <B2ConverterPage /> },
           { path: 'tools/passport-photo', element: <PassportPhotoPage /> },
+          { path: 'applications', element: <MyApplicationsPage /> },
         ],
       },
     ],
@@ -110,6 +115,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <AdminDashboard /> },
           { path: 'approvals', element: <UsersApprovals /> },
+          { path: 'customers', element: <AdminCustomers /> },
           { path: 'services', element: <ServiceCatalogue /> },
           { path: 'announcements', element: <AnnouncementsAdmin /> },
           { path: 'committees', element: <CommitteesAdmin /> },

@@ -22,13 +22,13 @@ export function AdminLoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
     try {
-      const user = await login({ phone: values.phone, password: values.password, mfaToken: values.mfaToken || undefined });
+      const { user, mfaSetupRequired } = await login({ phone: values.phone, password: values.password, mfaToken: values.mfaToken || undefined });
       if (user.role === 'USER') {
         await logout();
         setFormError('ಈ ಪ್ರವೇಶ ನಿರ್ವಾಹಕ ಖಾತೆಗಳಿಗೆ ಮಾತ್ರ · This entrance is for admin accounts. Operators sign in at the main login.');
         return;
       }
-      navigate('/admin');
+      navigate(mfaSetupRequired ? '/admin/mfa-setup' : '/admin', { replace: true });
     } catch (err) {
       if (err instanceof ApiClientError) {
         if (err.code === 'MFA_REQUIRED') { setMfaRequired(true); setFormError('ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ · Enter your authenticator code'); return; }

@@ -1,14 +1,31 @@
 // admin.api.ts — admin console data hooks (users, content, committees, links, docs, wallets, apps, audit).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, apiForm } from '@/lib/api-client';
+import { api, apiForm, getCsrfToken } from '@/lib/api-client';
 import { toast } from '@/lib/toast';
 import type { Paginated, SessionUser } from '@/types/api';
 import type { CommitteeMember, GovLink, PublicAnnouncement, Service } from '@/types/entities';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-function readCookie(name: string) {
-  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return m ? decodeURIComponent(m[1] ?? '') : null;
+
+// Queues that USERS fill (sign-ups, UPI top-ups, applications) must update without a page reload,
+// otherwise a registration made in another tab never "comes" to the admin. The app-wide default
+// disables focus refetch, so these queries opt back in and also poll.
+const LIVE = { refetchOnWindowFocus: true, refetchInterval: 20_000, staleTime: 5_000 } as const;
+
+// ── Overview: counts of everything waiting on staff (dashboard tiles + nav badges) ──
+export interface AdminOverview {
+  pendingUsers: number;
+  activeUsers: number;
+  pendingManualTopups: number;
+  openGrievances: number;
+  newApplications: number;
+  newInsurance: number;
+  newMembership: number;
+  newTraining: number;
+  totalCustomers: number;
+}
+export function useAdminOverview() {
+  return useQuery({ queryKey: ['admin-overview'], queryFn: () => api<AdminOverview>('/admin/overview'), ...LIVE });
 }
 
 // ── Users / approvals ── (shape matches the backend SAFE_SELECT, not SessionUser)
@@ -29,7 +46,7 @@ export function useAdminUsers(params: { status?: string; search?: string; page: 
   const qs = new URLSearchParams({ page: String(params.page), limit: '20' });
   if (params.status) qs.set('status', params.status);
   if (params.search) qs.set('search', params.search);
-  return useQuery({ queryKey: ['admin-users', params], queryFn: () => api<Paginated<AdminUser>>(`/admin/users?${qs}`), placeholderData: (p) => p });
+  return useQuery({ queryKey: ['admin-users', params], queryFn: () => api<Paginated<AdminUser>>(`/admin/users?${qs}`), placeholderData: (p) => p, ...LIVE });
 }
 export function useUserAction() {
   const qc = useQueryClient();
@@ -38,6 +55,7 @@ export function useUserAction() {
       api(`/admin/users/${id}/${action}`, { method: 'POST', body: reason ? { reason } : undefined }),
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ['admin-users'] });
+      qc.invalidateQueries({ queryKey: ['admin-overview'] });
       const msg: Record<string, string> = {
         approve: 'ಬಳಕೆದಾರ ಅನುಮೋದಿಸಲಾಗಿದೆ',
         reject: 'ಅರ್ಜಿ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ',
@@ -117,11 +135,10 @@ export function useDocumentMutations() {
   return {
     upload: useMutation({
       mutationFn: async (form: FormData) => {
-        await fetch(`${BASE}/api/v1/auth/csrf`, { credentials: 'include' });
         const res = await fetch(`${BASE}/api/v1/admin/documents`, {
           method: 'POST',
           credentials: 'include',
-          headers: { 'x-csrf-token': readCookie('kscwc.csrf') ?? '' },
+          headers: { 'x-csrf-token': await getCsrfToken() },
           body: form,
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? 'Upload failed');
@@ -150,15 +167,26 @@ export function useWalletAdjust() {
 }
 
 // ── Applications ──
-export function useAdminApplications(kind: string, page: number) {
-  return useQuery({ queryKey: ['admin-apps', kind, page], queryFn: () => api<Paginated<Record<string, unknown>>>(`/admin/applications/${kind}?page=${page}&limit=20`), placeholderData: (p) => p });
+export function useAdminApplications(kind: string, page: number, status?: string) {
+  const qs = new URLSearchParams({ page: String(page), limit: '20' });
+  if (status) qs.set('status', status);
+  return useQuery({
+    queryKey: ['admin-apps', kind, page, status ?? ''],
+    queryFn: () => api<Paginated<Record<string, unknown>>>(`/admin/applications/${kind}?${qs}`),
+    placeholderData: (p) => p,
+    ...LIVE,
+  });
 }
 export function useApplicationStatus(kind: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status, resolutionNote }: { id: string; status: string; resolutionNote?: string }) =>
       api(`/admin/applications/${kind}/${id}/status`, { method: 'POST', body: { status, resolutionNote } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-apps', kind] }); toast('ಅರ್ಜಿ ಸ್ಥಿತಿ ನವೀಕರಿಸಲಾಗಿದೆ', 'success'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-apps', kind] });
+      qc.invalidateQueries({ queryKey: ['admin-overview'] });
+      toast('ಅರ್ಜಿ ಸ್ಥಿತಿ ನವೀಕರಿಸಲಾಗಿದೆ', 'success');
+    },
   });
 }
 
@@ -189,12 +217,17 @@ export function useAdminManualTopups(status: string, page: number) {
     queryKey: ['admin-manual-topups', status, page],
     queryFn: () => api<Paginated<AdminManualTopup>>(`/admin/manual-topups?${qs}`),
     placeholderData: (p) => p,
+    ...LIVE,
   });
 }
 
 export function useManualTopupReview() {
   const qc = useQueryClient();
-  const inv = () => qc.invalidateQueries({ queryKey: ['admin-manual-topups'] });
+  const inv = () => {
+    qc.invalidateQueries({ queryKey: ['admin-manual-topups'] });
+    qc.invalidateQueries({ queryKey: ['admin-overview'] });
+    qc.invalidateQueries({ queryKey: ['admin-wallets'] });
+  };
   return {
     approve: useMutation({
       mutationFn: ({ id, amountPaise, note }: { id: string; amountPaise?: number; note?: string }) =>
@@ -237,4 +270,53 @@ export function useSetFidPortalLink() {
       toast('ಎಫ್‌ಐಡಿ ಪೋರ್ಟಲ್ ಲಿಂಕ್ ಉಳಿಸಲಾಗಿದೆ', 'success');
     },
   });
+}
+
+// ── Customers across all operators + the admin report ──
+export interface AdminCustomer {
+  id: string;
+  fullName: string;
+  mobileNormalized: string;
+  referenceCode: string | null;
+  feePaise: number | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+  service: { id: string; nameKn: string; nameEn: string } | null;
+  owner: { id: string; fullName: string; phoneNormalized: string; centreName: string | null } | null;
+}
+export interface AdminCustomerFilter {
+  page: number;
+  status?: string;
+  serviceId?: string;
+  search?: string;
+  ownerUserId?: string;
+}
+function filterQs(f: Record<string, unknown>) {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== '') qs.set(k, String(v));
+  return qs.toString();
+}
+export function useAdminCustomers(f: AdminCustomerFilter) {
+  return useQuery({
+    queryKey: ['admin-customers', f],
+    queryFn: () => api<Paginated<AdminCustomer>>(`/admin/customers?${filterQs({ ...f, limit: 20 })}`),
+    placeholderData: (p) => p,
+    refetchOnWindowFocus: true,
+  });
+}
+export interface AdminCustomerReport {
+  totals: { total: number; feeTotalPaise: number };
+  byStatus: { status: string; count: number }[];
+  byService: { serviceId: string; nameKn: string; nameEn?: string; count: number }[];
+}
+export function useAdminCustomerReport(f: { status?: string; serviceId?: string; ownerUserId?: string }) {
+  return useQuery({
+    queryKey: ['admin-customer-report', f],
+    queryFn: () => api<AdminCustomerReport>(`/admin/reports/customers?${filterQs(f)}`),
+    refetchOnWindowFocus: true,
+  });
+}
+export function adminCustomersCsvPath(f: { status?: string; serviceId?: string; ownerUserId?: string }) {
+  const q = filterQs(f);
+  return `/admin/reports/export.csv${q ? `?${q}` : ''}`;
 }

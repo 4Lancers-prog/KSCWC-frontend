@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Spinner } from '@/components/ui';
 
 export function RequireAuth() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, mfaSetupRequired } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -15,5 +15,7 @@ export function RequireAuth() {
     );
   }
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  // An admin whose MFA enrolment is pending can't use any API yet — send them to finish it.
+  if (mfaSetupRequired) return <Navigate to="/admin/mfa-setup" replace />;
   return <Outlet />;
 }

@@ -1,11 +1,12 @@
-// RequireStaff.tsx — admin-area gate. Unauthenticated → /admin/login; operators → /app.
+// RequireStaff.tsx — admin-area gate. Unauthenticated → /admin/login; operators → /app;
+// admins who still must enrol two-factor auth → /admin/mfa-setup.
 // The API independently enforces every permission; this only controls navigation.
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Spinner } from '@/components/ui';
 
 export function RequireStaff() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, mfaSetupRequired } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -17,5 +18,6 @@ export function RequireStaff() {
   }
   if (!isAuthenticated) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   if (user && user.role === 'USER') return <Navigate to="/app" replace />;
+  if (mfaSetupRequired) return <Navigate to="/admin/mfa-setup" replace />;
   return <Outlet />;
 }

@@ -1,6 +1,6 @@
 // LoginPage.tsx — operator login wired to the API (handles pending + MFA).
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthShell } from '@/components/layout/AuthShell';
@@ -12,6 +12,8 @@ import { L, H } from '@/i18n';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const { login } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
   const [mfaRequired, setMfaRequired] = useState(false);
@@ -25,13 +27,15 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
     try {
-      const user = await login({
+      const { user, mfaSetupRequired } = await login({
         phone: values.phone,
         password: values.password,
         mfaToken: values.mfaToken || undefined,
       });
-      // Staff land on the admin console; operators on their dashboard.
-      navigate(user.role === 'USER' ? '/app' : '/admin');
+      // Staff land on the admin console; operators on their dashboard (or the page they came from).
+      if (mfaSetupRequired) navigate('/admin/mfa-setup', { replace: true });
+      else if (user.role !== 'USER') navigate('/admin', { replace: true });
+      else navigate(from && from.startsWith('/app') ? from : '/app', { replace: true });
     } catch (err) {
       if (err instanceof ApiClientError) {
         if (err.code === 'MFA_REQUIRED') {
@@ -40,7 +44,15 @@ export function LoginPage() {
           return;
         }
         if (err.code === 'ACCOUNT_PENDING') {
-          navigate('/pending');
+          navigate('/pending', { state: { fromLogin: true } });
+          return;
+        }
+        if (err.code === 'ACCOUNT_REJECTED') {
+          setFormError(`ನೋಂದಣಿ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ · ${err.message}`);
+          return;
+        }
+        if (err.code === 'ACCOUNT_SUSPENDED') {
+          setFormError(`ಖಾತೆ ಅಮಾನತುಗೊಂಡಿದೆ · ${err.message}`);
           return;
         }
         setFormError(err.message);

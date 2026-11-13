@@ -1,19 +1,30 @@
 // DashboardLayout.tsx — authenticated operator shell with a simple responsive sidebar.
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/cn';
+import { SideNav, type SideNavGroup } from './SideNav';
 import { L, H } from '@/i18n';
 import { Emblem } from '@/components/Emblem';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 
-const LINKS = [
-  { to: '/app', label: L.dashboard, end: true },
-  { to: '/app/customers', label: 'ಗ್ರಾಹಕರು' },
-  { to: '/app/reports', label: 'ವರದಿಗಳು' },
-  { to: '/app/wallet', label: 'ವಾಲೆಟ್' },
-  { to: '/app/fid', label: 'ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್' },
-  { to: '/app/tools/b2-photo', label: 'B2 ಫೋಟೋ' },
-  { to: '/app/tools/passport-photo', label: 'ಪಾಸ್‌ಪೋರ್ಟ್ ಫೋಟೋ' },
+const GROUPS: SideNavGroup[] = [
+  {
+    title: 'ಮುಖ್ಯ · Main',
+    items: [
+      { to: '/app', kn: L.dashboard, en: 'Dashboard', end: true },
+      { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers' },
+      { to: '/app/reports', kn: 'ವರದಿಗಳು', en: 'Reports' },
+      { to: '/app/wallet', kn: 'ವಾಲೆಟ್', en: 'Wallet & top-up' },
+      { to: '/app/applications', kn: 'ನನ್ನ ಅರ್ಜಿಗಳು', en: 'My applications' },
+    ],
+  },
+  {
+    title: 'ಸಾಧನಗಳು · Tools',
+    items: [
+      { to: '/app/fid', kn: 'ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್', en: 'FID card maker' },
+      { to: '/app/tools/b2-photo', kn: 'B2 ಫೋಟೋ', en: 'B2 photo converter' },
+      { to: '/app/tools/passport-photo', kn: 'ಪಾಸ್‌ಪೋರ್ಟ್ ಫೋಟೋ', en: 'Passport photo' },
+    ],
+  },
 ];
 
 export function DashboardLayout() {
@@ -39,7 +50,7 @@ export function DashboardLayout() {
             className="ml-2"
             onClick={async () => {
               await logout();
-              navigate('/login');
+              navigate('/login', { replace: true });
             }}
           >
             {L.logout}
@@ -48,27 +59,11 @@ export function DashboardLayout() {
         <div className="h-[3px] w-full bg-gold-500" />
       </header>
 
-      <div className="container-content grid gap-6 py-6 lg:grid-cols-[220px_1fr]">
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <nav className="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Operator">
-            {LINKS.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
-                className={({ isActive }) =>
-                  cn(
-                    'whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate2 hover:bg-white',
-                    isActive && 'bg-white text-navy-800 shadow-card',
-                  )
-                }
-              >
-                {l.label}
-              </NavLink>
-            ))}
-          </nav>
+      <div className="container-content grid grid-cols-[minmax(0,1fr)] gap-6 py-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
+          <SideNav groups={GROUPS} label="Operator" />
         </aside>
-        <main>
+        <main className="min-w-0">
           <Outlet />
         </main>
       </div>

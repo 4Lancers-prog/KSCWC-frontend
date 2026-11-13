@@ -1,14 +1,13 @@
-// WalletPage.tsx — balance, two top-up methods (UPI/QR with admin verification, or Razorpay),
+// WalletPage.tsx — balance, UPI/QR top-up (verified by an admin before credit),
 // the ledger, and the user's manual top-up request history.
 import { useState, type FormEvent } from 'react';
 import { Button, Input, Table, Th, Td, Pagination, Spinner, Alert } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import {
-  useWallet, useTransactions, useCreateTopup, useVerifyPayment,
+  useWallet, useTransactions,
   usePaymentQr, usePaymentQrImage, useMyManualTopups, useSubmitManualTopup,
   type ManualTopup,
 } from '../wallet.api';
-import { loadRazorpay, openRazorpay } from '@/lib/razorpay';
 import { rupeesToPaise } from '@/lib/money';
 import { formatPaise, formatDate } from '@/lib/format';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,7 +32,6 @@ const STATUS: Record<ManualTopup['status'], { kn: string; cls: string }> = {
 export function WalletPage() {
   const { user } = useAuth();
   const wallet = useWallet();
-  const [method, setMethod] = useState<'upi' | 'card'>('upi');
   const [page, setPage] = useState(1);
   const txns = useTransactions(page);
 
@@ -53,23 +51,9 @@ export function WalletPage() {
             </p>
           </div>
 
-          {/* top-up method */}
+          {/* top-up: pay to the QR, then submit the UTR for admin verification */}
           <div className="rounded-xl2 border border-line bg-white p-6 shadow-card">
-            <div className="mb-4 inline-flex rounded-lg bg-mist p-1 text-sm">
-              <button
-                onClick={() => setMethod('upi')}
-                className={cn('rounded-md px-3 py-1.5 font-medium', method === 'upi' ? 'bg-white text-navy-800 shadow-card' : 'text-slate2')}
-              >
-                UPI / QR
-              </button>
-              <button
-                onClick={() => setMethod('card')}
-                className={cn('rounded-md px-3 py-1.5 font-medium', method === 'card' ? 'bg-white text-navy-800 shadow-card' : 'text-slate2')}
-              >
-                ಕಾರ್ಡ್ · Card
-              </button>
-            </div>
-            {method === 'upi' ? <UpiTopup /> : <CardTopup />}
+            <UpiTopup />
           </div>
         </div>
 
@@ -125,7 +109,7 @@ function UpiTopup() {
 
   if (qr.isLoading) return <div className="py-6 text-center"><Spinner className="mx-auto h-6 w-6 text-navy-500" /></div>;
   if (qr.isError) {
-    return <Alert tone="info">UPI ಪಾವತಿ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ · UPI payment isn’t set up yet. Please use Card, or try later.</Alert>;
+    return <Alert tone="info">UPI ಪಾವತಿ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ · UPI payment isn’t set up yet. The council will publish the payment QR soon — please check back later.</Alert>;
   }
 
   const onSubmit = async (e: FormEvent) => {
@@ -187,67 +171,6 @@ function UpiTopup() {
         </div>
         <Button type="submit" loading={submit.isPending} className="w-full">ವಿನಂತಿ ಸಲ್ಲಿಸಿ · Submit for verification</Button>
       </form>
-    </div>
-  );
-}
-
-// ── Razorpay card flow (instant, server-verified) ──
-function CardTopup() {
-  const { user } = useAuth();
-  const createTopup = useCreateTopup();
-  const verify = useVerifyPayment();
-  const [rupees, setRupees] = useState('');
-  const [msg, setMsg] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const startTopup = async () => {
-    setMsg(null);
-    const amount = Number(rupees);
-    if (!amount || amount <= 0) return setMsg({ tone: 'error', text: 'ಮಾನ್ಯ ಮೊತ್ತ ನಮೂದಿಸಿ · Enter a valid amount' });
-    setBusy(true);
-    try {
-      const order = await createTopup.mutateAsync(rupeesToPaise(amount));
-      await loadRazorpay();
-      openRazorpay({
-        key: order.keyId,
-        order_id: order.razorpayOrderId,
-        amount: order.amountPaise,
-        currency: order.currency,
-        name: 'KSCWC',
-        description: 'ವಾಲೆಟ್ ಟಾಪ್-ಅಪ್',
-        prefill: { contact: user?.phone, name: user?.fullName },
-        theme: { color: '#0b2340' },
-        handler: async (resp) => {
-          try {
-            const res = await verify.mutateAsync({
-              razorpayOrderId: resp.razorpay_order_id,
-              razorpayPaymentId: resp.razorpay_payment_id,
-              razorpaySignature: resp.razorpay_signature,
-            });
-            setMsg({ tone: 'success', text: `ಟಾಪ್-ಅಪ್ ಯಶಸ್ವಿ · Reference: ${resp.razorpay_payment_id}${res.alreadyCredited ? ' (already credited)' : ''}` });
-            setRupees('');
-          } catch (e) {
-            setMsg({ tone: 'error', text: e instanceof ApiClientError ? e.message : 'Verification failed' });
-          }
-        },
-        modal: { ondismiss: () => setMsg({ tone: 'info', text: 'ಪಾವತಿ ರದ್ದುಗೊಂಡಿದೆ · Payment cancelled' }) },
-      });
-    } catch (e) {
-      setMsg({ tone: 'error', text: e instanceof ApiClientError ? e.message : 'Could not start top-up' });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div>
-      {msg && <div className="mb-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
-      <label htmlFor="amt" className="text-sm font-medium text-navy-900">ಟಾಪ್-ಅಪ್ ಮೊತ್ತ (₹)</label>
-      <div className="mt-1.5 flex gap-2">
-        <Input id="amt" inputMode="decimal" placeholder="500" value={rupees} onChange={(e) => setRupees(e.target.value)} />
-        <Button onClick={startTopup} loading={busy || verify.isPending}>ಟಾಪ್-ಅಪ್</Button>
-      </div>
-      <p className="mt-2 text-xs text-slate2">ಪಾವತಿಯನ್ನು Razorpay ಮೂಲಕ ಸುರಕ್ಷಿತವಾಗಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ · Verified securely server-side.</p>
     </div>
   );
 }

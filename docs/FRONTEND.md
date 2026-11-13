@@ -27,3 +27,8 @@ If the API is served from a different origin than the SPA in production, add tha
 ## Build
 `pnpm build` runs `tsc --noEmit` then `vite build` → static assets in `dist/` (deploy that folder).
 Leave `VITE_API_BASE_URL` empty to proxy `/api` in dev; set it to the API origin for production.
+
+## Hosting: SPA fallback
+`public/_redirects` (Netlify / Cloudflare Pages) and `vercel.json` (Vercel) serve `index.html` for
+every path, so refreshing `/admin` or `/app/wallet` doesn't 404. `_redirects` also has a commented
+line for proxying `/api/*` to the backend — the recommended setup (same-site cookies).

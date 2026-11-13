@@ -54,14 +54,6 @@ export interface WalletTxn {
   createdAt: string;
 }
 
-export interface TopupOrder {
-  paymentOrderId: string;
-  razorpayOrderId: string;
-  amountPaise: number;
-  currency: string;
-  keyId: string;
-}
-
 export interface FidGeneration {
   id: string;
   status: 'QUEUED' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
