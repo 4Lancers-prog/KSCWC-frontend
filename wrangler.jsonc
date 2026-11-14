@@ -11,6 +11,9 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  // API_ORIGIN / PROXY_SHARED_SECRET are set in the Cloudflare dashboard; keep them across deploys.
+  // Backend address (public, not a secret). PROXY_SHARED_SECRET stays in the Cloudflare dashboard.
+  "vars": {
+    "API_ORIGIN": "https://kscwc-backend-production.up.railway.app"
+  },
   "keep_vars": true
 }
