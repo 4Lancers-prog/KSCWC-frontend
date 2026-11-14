@@ -320,3 +320,42 @@ export function adminCustomersCsvPath(f: { status?: string; serviceId?: string; 
   const q = filterQs(f);
   return `/admin/reports/export.csv${q ? `?${q}` : ''}`;
 }
+
+// ── Operator devices (max 2, one signed in at a time) ──
+export interface OperatorDevice {
+  id: string;
+  label: string;
+  createdAt: string;
+  lastSeenAt: string;
+  signedIn: boolean;
+  idle: boolean | null;
+}
+export interface OperatorDevices {
+  maxDevices: number;
+  idleMinutes: number;
+  devices: OperatorDevice[];
+}
+export function useOperatorDevices(userId: string | null) {
+  return useQuery({
+    queryKey: ['admin-user-devices', userId],
+    queryFn: () => api<OperatorDevices>(`/admin/users/${userId}/devices`),
+    enabled: !!userId,
+    refetchOnWindowFocus: true,
+  });
+}
+export function useDeviceActions(userId: string | null) {
+  const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: ['admin-user-devices', userId] });
+  return {
+    remove: useMutation({
+      mutationFn: (deviceRowId: string) => api(`/admin/users/${userId}/devices/${deviceRowId}`, { method: 'DELETE' }),
+      onSuccess: () => { refresh(); toast('ಸಾಧನ ತೆಗೆದುಹಾಕಲಾಗಿದೆ · Device removed', 'success'); },
+      onError: (e: Error) => toast(e.message, 'error'),
+    }),
+    signOut: useMutation({
+      mutationFn: () => api(`/admin/users/${userId}/sign-out`, { method: 'POST' }),
+      onSuccess: () => { refresh(); toast('ಸೈನ್ ಔಟ್ ಮಾಡಲಾಗಿದೆ · Signed out', 'success'); },
+      onError: (e: Error) => toast(e.message, 'error'),
+    }),
+  };
+}

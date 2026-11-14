@@ -20,10 +20,10 @@ export function Pagination({
       </span>
       <div className="flex gap-2">
         <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}>
-          ಹಿಂದಿನ
+          <span aria-hidden>‹</span> ಹಿಂದಿನ
         </Button>
         <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => onChange(page + 1)}>
-          ಮುಂದಿನ
+          ಮುಂದಿನ <span aria-hidden>›</span>
         </Button>
       </div>
     </div>

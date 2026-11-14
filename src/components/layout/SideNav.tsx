@@ -23,6 +23,8 @@ export function SideNav({ groups, label }: { groups: SideNavGroup[]; label: stri
       className="overflow-hidden rounded-xl2 border border-navy-700 bg-navy-900 shadow-card lg:flex lg:max-h-[calc(100vh-7.5rem)] lg:flex-col"
     >
       <div className="h-[3px] w-full shrink-0 bg-gold-500" />
+      {/* phones: the menu scrolls sideways — fade the right edge so it's clear there is more */}
+      <div className="relative after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-10 after:bg-gradient-to-l after:from-navy-900 after:to-transparent after:content-[''] lg:after:hidden">
       <div className="flex gap-1 overflow-x-auto p-2 lg:block lg:overflow-y-auto lg:overscroll-contain lg:p-2 [scrollbar-color:theme(colors.navy.600)_transparent] [scrollbar-width:thin]">
         {groups.map((g, gi) => (
           <div
@@ -84,6 +86,7 @@ export function SideNav({ groups, label }: { groups: SideNavGroup[]; label: stri
             ))}
           </div>
         ))}
+      </div>
       </div>
     </nav>
   );

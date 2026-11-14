@@ -68,7 +68,7 @@ export function ApplicationsAdmin() {
       <div className="mt-4 flex flex-wrap gap-2">
         {KINDS.map((k, i) => (
           <button key={k.key} onClick={() => { setParams({ tab: k.key }); setPage(1); setStatus(''); setOpen(null); }}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm ${i === kindIdx ? 'bg-navy-600 text-white' : 'bg-white ring-1 ring-line'}`}>
+            className="chip" aria-pressed={i === kindIdx}>
             {k.kn}
             {badge[k.key] > 0 && <span className="rounded-full bg-gold-500 px-1.5 text-xs font-bold text-navy-950">{badge[k.key]}</span>}
           </button>
@@ -96,7 +96,7 @@ export function ApplicationsAdmin() {
                   return [
                     <tr key={id}>
                       <Td className="text-navy-900">
-                        <button className="text-left hover:underline" onClick={() => setOpen(isOpen ? null : id)} aria-expanded={isOpen}>
+                        <button className="text-left link" onClick={() => setOpen(isOpen ? null : id)} aria-expanded={isOpen}>
                           {r[TITLE[kind.key]] ?? '—'} <span className="text-xs text-slate2">{isOpen ? '▲' : '▼'}</span>
                         </button>
                         <div className="text-xs text-slate2">

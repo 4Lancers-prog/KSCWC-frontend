@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/cn';
+import { buttonClass } from '@/components/ui';
 import { L, H } from '@/i18n';
 import { Emblem } from '@/components/Emblem';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,8 +45,10 @@ export function PublicLayout() {
                 end={item.to === '/'}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-md px-3 py-2 text-sm font-medium text-navy-100 hover:bg-navy-800 hover:text-white',
-                    isActive && 'bg-navy-800 text-white',
+                    'relative rounded-md px-3 py-2 text-sm font-medium text-navy-100 transition-colors hover:bg-navy-800 hover:text-white',
+                    // current page: gold bar under the label
+                    "after:absolute after:inset-x-3 after:-bottom-0.5 after:h-[3px] after:rounded-full after:content-['']",
+                    isActive ? 'text-white after:bg-gold-400' : 'hover:after:bg-navy-400',
                   )
                 }
               >
@@ -55,27 +58,26 @@ export function PublicLayout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-3">
-            <Link
-              to={homeTarget}
-              className="rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-navy-950 transition hover:bg-gold-400 active:scale-[.98]"
-            >
+            <Link to={homeTarget} className={buttonClass('gold', 'sm')}>
               {isAuthenticated ? L.dashboard : L.login}
             </Link>
             <button
-              className="rounded-md p-2 text-navy-100 hover:bg-navy-800 lg:hidden"
-              aria-label="Menu"
+              type="button"
+              className={buttonClass('outlineLight', 'sm', 'lg:hidden')}
               aria-expanded={open}
+              aria-controls="mobile-nav"
               onClick={() => setOpen((v) => !v)}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                {open ? <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" /> : <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />}
               </svg>
+              {open ? 'ಮುಚ್ಚಿ' : 'ಮೆನು'}
             </button>
           </div>
         </div>
         <div className="h-[3px] w-full bg-gold-500" />
         {open && (
-          <nav className="border-t border-navy-800 bg-navy-900 lg:hidden" aria-label="Mobile">
+          <nav id="mobile-nav" className="border-t border-navy-800 bg-navy-900 lg:hidden" aria-label="Mobile">
             <div className="container-content flex flex-col py-2">
               {NAV.map((item) => (
                 <NavLink
@@ -85,8 +87,8 @@ export function PublicLayout() {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'rounded-md px-3 py-2.5 text-sm text-navy-100 hover:bg-navy-800',
-                      isActive && 'bg-navy-800 text-white',
+                      'flex min-h-11 items-center rounded-md border-l-4 px-3 text-sm text-navy-100 hover:bg-navy-800',
+                      isActive ? 'border-gold-400 bg-navy-800 text-white' : 'border-transparent',
                     )
                   }
                 >

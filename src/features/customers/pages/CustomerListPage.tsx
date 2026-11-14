@@ -1,7 +1,8 @@
 // CustomerListPage.tsx — operator customer list with filters, pagination and CSV export.
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, Select, Table, Th, Td, Pagination, Spinner, Alert } from '@/components/ui';
+import { buttonClass } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/layout/StatusBadge';
 import { useCustomers, useServices, type CustomerFilter } from '../customers.api';
 import { customerStatusMeta } from '@/lib/status';
@@ -10,6 +11,7 @@ import { formatDateOnly } from '@/lib/format';
 import type { CustomerStatus } from '@/types/entities';
 
 export function CustomerListPage() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<CustomerFilter>({ page: 1, limit: 20 });
   const [search, setSearch] = useState('');
   const { data: services } = useServices();
@@ -32,8 +34,8 @@ export function CustomerListPage() {
           >
             CSV ಡೌನ್‌ಲೋಡ್
           </Button>
-          <Link to="/app/customers/new" className="inline-flex h-11 items-center rounded-lg bg-navy-600 px-5 text-[15px] font-medium text-white hover:bg-navy-700">
-            + ಹೊಸ ಗ್ರಾಹಕ
+          <Link to="/app/customers/new" className={buttonClass('primary')}>
+            + ಹೊಸ ಗ್ರಾಹಕ · New customer
           </Link>
         </div>
       </div>
@@ -69,8 +71,8 @@ export function CustomerListPage() {
           <div className="rounded-xl2 border border-dashed border-line bg-white p-12 text-center">
             <p className="font-display text-navy-900">ಇನ್ನೂ ಯಾವುದೇ ಗ್ರಾಹಕರಿಲ್ಲ</p>
             <p className="mt-1 text-sm text-slate2">No customers yet. Add your first record.</p>
-            <Link to="/app/customers/new" className="mt-4 inline-block rounded-lg bg-navy-600 px-5 py-2.5 text-white hover:bg-navy-700">
-              + ಹೊಸ ಗ್ರಾಹಕ
+            <Link to="/app/customers/new" className={buttonClass('primary', 'md', 'mt-4')}>
+              + ಹೊಸ ಗ್ರಾಹಕ · New customer
             </Link>
           </div>
         ) : (
@@ -83,22 +85,27 @@ export function CustomerListPage() {
                   <Th>ಸೇವೆ · Service</Th>
                   <Th>ಸ್ಥಿತಿ · Status</Th>
                   <Th>ದಿನಾಂಕ</Th>
-                  <Th> </Th>
+                  <Th><span className="sr-only">Actions</span></Th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((c) => {
                   const meta = customerStatusMeta[c.status];
                   return (
-                    <tr key={c.id} className="hover:bg-mist">
+                    // the whole row opens the customer; the Open button is the keyboard/screen-reader path
+                    <tr key={c.id} className="row-click" onClick={(e) => {
+                      if ((e.target as HTMLElement).closest('a,button')) return;
+                      navigate(`/app/customers/${c.id}`);
+                    }}>
                       <Td className="font-medium text-navy-900">{c.fullName}</Td>
                       <Td>{c.mobileNormalized}</Td>
                       <Td>{c.service?.nameKn ?? '—'}</Td>
                       <Td><StatusBadge label={`${meta.kn}`} tone={meta.tone} /></Td>
                       <Td>{formatDateOnly(c.createdAt)}</Td>
                       <Td>
-                        <Link to={`/app/customers/${c.id}`} className="font-medium text-navy-600 hover:underline">
-                          ವಿವರ
+                        <Link to={`/app/customers/${c.id}`} className={buttonClass('secondary', 'sm')}
+                          aria-label={`${c.fullName} ವಿವರ ತೆರೆಯಿರಿ · Open details`}>
+                          ತೆರೆಯಿರಿ · Open
                         </Link>
                       </Td>
                     </tr>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, FormField, Alert } from '@/components/ui';
+import { Button, Input, FormField, Alert, PasswordInput } from '@/components/ui';
 import { Emblem } from '@/components/Emblem';
 import { loginForm, type LoginForm } from '@/lib/schemas';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,7 @@ export function AdminLoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [mfaRequired, setMfaRequired] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+    mode: 'onTouched',
     resolver: zodResolver(loginForm),
   });
 
@@ -61,7 +62,7 @@ export function AdminLoginPage() {
             <Input id="phone" type="tel" inputMode="numeric" autoComplete="username" invalid={!!errors.phone} {...register('phone')} />
           </FormField>
           <FormField id="password" label="ಪಾಸ್‌ವರ್ಡ್" helper="Password" error={errors.password?.message} required>
-            <Input id="password" type="password" autoComplete="current-password" invalid={!!errors.password} {...register('password')} />
+            <PasswordInput id="password" autoComplete="current-password" invalid={!!errors.password} {...register('password')} />
           </FormField>
           {mfaRequired && (
             <FormField id="mfaToken" label="ದೃಢೀಕರಣ ಕೋಡ್" helper="Authenticator code" error={errors.mfaToken?.message}>
@@ -70,7 +71,7 @@ export function AdminLoginPage() {
           )}
           <Button type="submit" block loading={isSubmitting}>ನಿರ್ವಾಹಕ ಪ್ರವೇಶ · Admin sign in</Button>
           <p className="text-center text-sm text-slate2">
-            ಸಂಚಾಲಕರೇ? <Link to="/login" className="font-medium text-navy-600 hover:underline">ಇಲ್ಲಿ ಪ್ರವೇಶಿಸಿ · Operator login</Link>
+            ಸಂಚಾಲಕರೇ? <Link to="/login" className="font-medium text-navy-600 link">ಇಲ್ಲಿ ಪ್ರವೇಶಿಸಿ · Operator login</Link>
           </p>
         </form>
       </div>

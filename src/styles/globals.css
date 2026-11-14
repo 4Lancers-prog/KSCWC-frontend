@@ -18,11 +18,18 @@
     @apply font-display text-navy-900;
     letter-spacing: -0.01em;
   }
-  /* Visible keyboard focus everywhere (accessibility floor). */
-  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid theme('colors.gold.500');
+  /* Visible keyboard focus everywhere: a bold gold ring (the emblem's colour) on navy or white. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid theme('colors.gold.400');
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
+  }
+  /* Anything that does something shows the hand cursor; disabled things say so. */
+  :where(a[href], button, [role='button'], summary, select, label[for], input[type='checkbox'], input[type='radio'], input[type='file']) {
+    cursor: pointer;
+  }
+  :where(button:disabled, [aria-disabled='true'], select:disabled, input:disabled) {
+    cursor: not-allowed;
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -43,12 +50,82 @@
   .container-content {
     @apply mx-auto w-full max-w-content px-4 sm:px-6;
   }
-  /* Cards that gently lift on hover. */
-  .hover-lift {
-    @apply transition duration-200;
+  /* ── Interaction language ──────────────────────────────────────────────────────────
+     Rule: anything you can press has a RAISED EDGE (like a key); information is FLAT.
+     The edge works on phones too, where there is no hover to reveal what's clickable. */
+
+  /* Text links: always underlined (not only on hover). Keeps the surrounding text colour. */
+  .link {
+    @apply font-medium underline decoration-[1.5px] underline-offset-[3px];
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    transition: text-decoration-color 0.15s;
   }
-  .hover-lift:hover {
-    @apply -translate-y-0.5 shadow-lift;
+  .link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* Clickable card ("tile"): border + raised bottom edge + round "open" badge (.tile-open). */
+  .tile {
+    @apply relative flex flex-col rounded-xl2 border bg-white p-5 text-left;
+    border-color: #c9d4e5;
+    box-shadow: 0 3px 0 0 theme('colors.navy.100');
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  }
+  .tile:hover {
+    border-color: theme('colors.navy.400');
+    box-shadow: 0 3px 0 0 theme('colors.navy.400');
+  }
+  .tile:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 theme('colors.navy.400');
+  }
+  .tile-open {
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy-50 text-navy-700;
+    transition: background-color 0.12s, color 0.12s;
+  }
+  .tile:hover .tile-open {
+    @apply bg-gold-400 text-navy-950;
+  }
+  /* Dark (navy) variant for the one most important tile on a page. */
+  .tile-dark {
+    @apply border-navy-950 bg-navy-800 text-white;
+    box-shadow: 0 3px 0 0 theme('colors.navy.950');
+  }
+  .tile-dark:hover {
+    @apply border-navy-950 bg-navy-700;
+    box-shadow: 0 3px 0 0 theme('colors.gold.500');
+  }
+  .tile-dark .tile-open {
+    @apply bg-white/15 text-white;
+  }
+
+  /* Information only — deliberately flat: no border edge, no badge, tinted background. */
+  .info-panel {
+    @apply rounded-xl2 border border-dashed border-navy-200 bg-white/60 p-5;
+  }
+
+  /* Filter chips / tabs: raised when selectable, pressed-in (filled) when selected. */
+  .chip {
+    @apply inline-flex min-h-10 items-center gap-2 rounded-full border-[1.5px] border-navy-300 bg-white px-4 text-sm font-semibold text-navy-800;
+    box-shadow: 0 2px 0 0 theme('colors.navy.200');
+    transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+  }
+  .chip:hover {
+    @apply border-navy-500 bg-navy-50;
+  }
+  .chip:active {
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+  .chip[aria-pressed='true'],
+  .chip[aria-selected='true'] {
+    @apply border-navy-700 bg-navy-600 text-white;
+    box-shadow: inset 0 2px 0 0 theme('colors.navy.800');
+  }
+
+  /* Whole table row opens something (pair with a visible button in the row). */
+  .row-click {
+    @apply cursor-pointer transition-colors hover:bg-navy-50/70;
   }
   /* Karnataka flag accent — a thin red/gold band used at the very top of the masthead. */
   .flag-stripe {

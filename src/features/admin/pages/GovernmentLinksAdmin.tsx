@@ -69,7 +69,7 @@ export function GovernmentLinksAdmin() {
               {data.map((l) => (
                 <tr key={l.id}>
                   <Td className="text-navy-900">{l.title}</Td>
-                  <Td className="max-w-[260px] truncate"><a href={l.url} target="_blank" rel="noopener noreferrer" className="text-navy-600 hover:underline">{l.url}</a></Td>
+                  <Td className="max-w-[260px] truncate"><a href={l.url} target="_blank" rel="noopener noreferrer" className="text-navy-600 link">{l.url}</a></Td>
                   <Td>{l.isActive ? 'ಸಕ್ರಿಯ' : 'ನಿಷ್ಕ್ರಿಯ'}</Td>
                   <Td>
                     <div className="flex flex-wrap gap-2">

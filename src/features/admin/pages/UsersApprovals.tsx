@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/layout/StatusBadge';
 import { formatDate } from '@/lib/format';
 import { useAdminUsers, useUserAction, type AdminUser } from '../admin.api';
 import { ReasonDialog } from '../components/ReasonDialog';
+import { DevicesDialog } from '../components/DevicesDialog';
 
 const statusTone = { PENDING_APPROVAL: 'warning', ACTIVE: 'success', REJECTED: 'danger', SUSPENDED: 'danger' } as const;
 const statusLabel = {
@@ -24,6 +25,7 @@ export function UsersApprovals() {
   const { data, isLoading, isFetching } = useAdminUsers({ status: status || undefined, search: search || undefined, page });
   const action = useUserAction();
   const [dialog, setDialog] = useState<{ user: AdminUser; act: 'reject' | 'suspend' } | null>(null);
+  const [devicesFor, setDevicesFor] = useState<AdminUser | null>(null);
 
   const run = (u: AdminUser, act: Act) => {
     if (act === 'reject' || act === 'suspend') return setDialog({ user: u, act });
@@ -104,6 +106,9 @@ export function UsersApprovals() {
                           <Button size="sm" variant="secondary" onClick={() => run(u, 'suspend')}>ಅಮಾನತು · Suspend</Button>
                         )}
                         {u.accountStatus === 'SUSPENDED' && <Button size="sm" onClick={() => run(u, 'reactivate')}>ಮರುಸಕ್ರಿಯ · Reactivate</Button>}
+                        {u.role === 'USER' && u.accountStatus !== 'PENDING_APPROVAL' && u.accountStatus !== 'REJECTED' && (
+                          <Button size="sm" variant="secondary" onClick={() => setDevicesFor(u)}>ಸಾಧನಗಳು · Devices</Button>
+                        )}
                       </div>
                     </Td>
                   </tr>
@@ -114,6 +119,8 @@ export function UsersApprovals() {
           </div>
         )}
       </div>
+
+      <DevicesDialog user={devicesFor} onClose={() => setDevicesFor(null)} />
 
       <ReasonDialog
         open={!!dialog}

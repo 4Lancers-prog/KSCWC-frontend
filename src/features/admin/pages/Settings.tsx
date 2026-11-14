@@ -46,7 +46,7 @@ export function Settings() {
               <Button type="submit" loading={save.isPending}>ಉಳಿಸಿ · Save</Button>
               <button
                 type="button"
-                className="text-sm text-navy-600 hover:underline"
+                className="text-sm text-navy-600 link"
                 onClick={() => setUrl(DEFAULT_FID_PORTAL_URL)}
               >
                 ಪೂರ್ವನಿಯೋಜಿತಕ್ಕೆ ಮರುಹೊಂದಿಸಿ · Reset to default

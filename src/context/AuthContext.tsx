@@ -1,8 +1,9 @@
 // AuthContext.tsx — session/user state sourced from GET /api/v1/auth/me.
-import { createContext, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, ApiClientError } from '@/lib/api-client';
+import { api, ApiClientError, SESSION_ENDED_EVENT } from '@/lib/api-client';
 import type { SessionUser } from '@/types/api';
+import { getDeviceId, setSignedOutNote } from '@/lib/device';
 
 interface LoginArgs {
   phone: string;
@@ -41,7 +42,10 @@ async function fetchMe(): Promise<MeState | null> {
   } catch (err) {
     // 401 = no session; 403 = session exists but the account was suspended/deactivated by an
     // admin. Either way the person is signed out as far as the UI is concerned.
-    if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) return null;
+    if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+      if (err.code === 'SESSION_ENDED') setSignedOutNote(err.message);
+      return null;
+    }
     throw err;
   }
 }
@@ -56,11 +60,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   });
 
+  // Any request can learn that this login was ended elsewhere: sign out locally right away, so the
+  // route guards send the user to the login page, which shows the reason.
+  useEffect(() => {
+    const onEnded = (e: Event) => {
+      setSignedOutNote((e as CustomEvent<string>).detail);
+      qc.setQueryData(['me'], null);
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
+    };
+    window.addEventListener(SESSION_ENDED_EVENT, onEnded);
+    return () => window.removeEventListener(SESSION_ENDED_EVENT, onEnded);
+  }, [qc]);
+
   const login = useCallback(
     async (args: LoginArgs) => {
       const res = await api<{ user: SessionUser; mfaSetupRequired?: boolean }>('/auth/login', {
         method: 'POST',
-        body: args,
+        body: { ...args, deviceId: getDeviceId() },
       });
       // Drop anything cached from a previous identity before showing the new one.
       qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });

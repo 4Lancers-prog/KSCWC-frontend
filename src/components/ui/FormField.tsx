@@ -14,10 +14,12 @@ interface Props {
   helper?: string;
   error?: string;
   required?: boolean;
+  /** Live hint shown under the field when there is no error (e.g. password rules). */
+  hint?: ReactNode;
   children: ReactNode;
 }
 
-export function FormField({ id, label, helper, error, required, children }: Props) {
+export function FormField({ id, label, helper, error, required, hint, children }: Props) {
   const describedBy = error ? `${id}-error` : helper ? `${id}-helper` : undefined;
   return (
     <div className="row-span-3 grid grid-rows-subgrid content-start gap-y-1.5">
@@ -34,10 +36,12 @@ export function FormField({ id, label, helper, error, required, children }: Prop
       </label>
       {/* clone-free: the field is expected to carry id + aria-describedby itself */}
       <div aria-describedby={describedBy}>{children}</div>
-      {error && (
+      {error ? (
         <p id={`${id}-error`} className="text-sm text-danger" role="alert">
           {error}
         </p>
+      ) : (
+        hint ?? null
       )}
     </div>
   );

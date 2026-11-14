@@ -102,7 +102,7 @@ export function AdminCustomers() {
                       <Td>{c.service?.nameKn ?? '—'}</Td>
                       <Td>
                         {c.owner ? (
-                          <button className="text-left text-navy-700 hover:underline" onClick={() => { setOwner({ id: c.owner!.id, name: c.owner!.fullName }); reset(); }}>
+                          <button className="text-left text-navy-700 link" onClick={() => { setOwner({ id: c.owner!.id, name: c.owner!.fullName }); reset(); }}>
                             {c.owner.fullName}
                             <div className="text-xs text-slate2">{c.owner.centreName ?? c.owner.phoneNormalized}</div>
                           </button>

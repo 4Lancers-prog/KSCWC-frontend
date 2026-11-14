@@ -28,7 +28,7 @@ export function DownloadsPage() {
                 <Td>{d.category ?? '—'}</Td>
                 <Td>{kb(d.sizeBytes)}</Td>
                 <Td>
-                  <button className="font-medium text-navy-600 hover:underline"
+                  <button className="font-medium text-navy-600 link"
                     onClick={() => downloadFile(`/public/documents/${d.id}/download`, d.title)}>
                     ಡೌನ್‌ಲೋಡ್
                   </button>

@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { L, H } from '@/i18n';
 import { Emblem } from '@/components/Emblem';
+import { buttonClass } from '@/components/ui';
 
 const SERVICES: { kn: string; en: string }[] = [
   { kn: 'ಆಧಾರ್ ನವೀಕರಣ', en: 'Aadhaar update' },
@@ -38,24 +39,15 @@ export function HomePage() {
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate2">{L.hero_body}</p>
             <p className="mt-2 max-w-xl text-sm text-slate2/80">{H.hero_body}</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link
-                to="/login"
-                className="rounded-lg bg-navy-600 px-6 py-3 text-[15px] font-semibold text-white hover:bg-navy-700"
-              >
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link to="/login" className={buttonClass('primary', 'lg')}>
                 {L.hero_cta_primary}
               </Link>
-              <Link
-                to="/register"
-                className="rounded-lg bg-white px-6 py-3 text-[15px] font-semibold text-navy-700 ring-1 ring-inset ring-line hover:bg-mist"
-              >
+              <Link to="/register" className={buttonClass('secondary', 'lg')}>
                 {L.hero_cta_secondary}
               </Link>
-              <Link
-                to="/about"
-                className="rounded-lg px-6 py-3 text-[15px] font-semibold text-navy-700 underline-offset-4 hover:underline"
-              >
-                ಪರಿಷತ್ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು →
+              <Link to="/about" className="link px-2 py-3 text-[15px] text-navy-700">
+                ಪರಿಷತ್ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು
               </Link>
             </div>
             <p className="mt-6 max-w-xl rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-inset ring-amber-100">
@@ -64,7 +56,7 @@ export function HomePage() {
           </div>
 
           {/* Capability panel, crowned by the emblem */}
-          <div className="rounded-xl2 border border-line bg-white p-6 shadow-card">
+          <div className="rounded-xl2 border border-line bg-white p-6">
             <div className="mb-4 flex flex-col items-center text-center">
               <Emblem size={84} />
             </div>
@@ -98,6 +90,9 @@ export function HomePage() {
             </div>
           ))}
         </div>
+        <Link to="/services" className={buttonClass('secondary', 'md', 'mt-6')}>
+          ಎಲ್ಲಾ ಸೇವೆಗಳನ್ನು ನೋಡಿ · See all services
+        </Link>
       </section>
 
       {/* How it works — a genuine sequence, so numbered markers are appropriate */}
@@ -108,7 +103,7 @@ export function HomePage() {
           <p className="mt-1 text-slate2">Getting started in three steps</p>
           <ol className="mt-8 grid gap-6 sm:grid-cols-3">
             {STEPS.map((step, i) => (
-              <li key={step.en} className="rounded-xl2 bg-white p-6 shadow-card">
+              <li key={step.en} className="rounded-xl2 border border-line bg-white p-6">
                 <span className="font-display text-3xl text-gold-500">{i + 1}</span>
                 <p className="mt-2 font-display text-lg text-navy-900">{step.kn}</p>
                 <p className="text-sm text-slate2">{step.en}</p>
@@ -125,10 +120,7 @@ export function HomePage() {
             <h2 className="font-display text-2xl text-white">ನಿಮ್ಮ ಕೇಂದ್ರವನ್ನು ಇಂದೇ ನೋಂದಾಯಿಸಿ</h2>
             <p className="mt-1 text-navy-100">Register your service centre today.</p>
           </div>
-          <Link
-            to="/register"
-            className="rounded-lg bg-gold-500 px-6 py-3 font-semibold text-navy-950 hover:bg-gold-400"
-          >
+          <Link to="/register" className={buttonClass('gold', 'lg')}>
             {L.hero_cta_secondary}
           </Link>
         </div>

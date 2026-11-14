@@ -47,7 +47,7 @@ export function MyApplicationsPage() {
               <section key={s.key} className="rounded-xl2 border border-line bg-white p-5 shadow-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="font-display text-lg text-navy-900">{s.kn}</h2>
-                  <Link to={s.form} className="text-sm font-medium text-navy-600 hover:underline">+ ಹೊಸದು · New</Link>
+                  <Link to={s.form} className="text-sm font-medium text-navy-600 link">+ ಹೊಸದು · New</Link>
                 </div>
                 {rows.length === 0 ? (
                   <p className="mt-3 text-sm text-slate2">ಇನ್ನೂ ಯಾವುದೂ ಇಲ್ಲ · Nothing submitted yet.</p>

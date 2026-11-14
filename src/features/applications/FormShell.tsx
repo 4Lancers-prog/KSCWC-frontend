@@ -24,7 +24,7 @@ export function FormShell({
           <>
             <Alert tone="success" title="ಸ್ವೀಕರಿಸಲಾಗಿದೆ">{success}</Alert>
             {isAuthenticated && user?.role === 'USER' ? (
-              <Link to="/app/applications" className="mt-4 inline-block font-medium text-navy-600 hover:underline">
+              <Link to="/app/applications" className="mt-4 inline-block font-medium text-navy-600 link">
                 ನನ್ನ ಅರ್ಜಿಗಳ ಸ್ಥಿತಿ ನೋಡಿ → · Track status in My applications
               </Link>
             ) : (

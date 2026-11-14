@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/layout/AuthShell';
 import { Alert } from '@/components/ui';
 import { L, H } from '@/i18n';
+import { buttonClass } from '@/components/ui/Button';
 
 export function PendingApprovalPage() {
   return (
@@ -12,7 +13,7 @@ export function PendingApprovalPage() {
       title={L.pending_title}
       subtitle={H.pending_title}
       footer={
-        <Link to="/" className="font-medium text-navy-600 hover:underline">
+        <Link to="/" className="font-medium text-navy-600 link">
           ← ಮುಖಪುಟ · Home
         </Link>
       }
@@ -28,7 +29,7 @@ export function PendingApprovalPage() {
       </ol>
       <Link
         to="/login"
-        className="mt-6 flex h-11 w-full items-center justify-center rounded-lg bg-navy-600 text-[15px] font-medium text-white hover:bg-navy-700"
+        className={buttonClass('primary', 'md', 'mt-6 w-full')}
       >
         ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಿ / ಪ್ರವೇಶಿಸಿ · Check status & sign in
       </Link>

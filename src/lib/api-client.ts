@@ -5,6 +5,12 @@ const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 const CSRF_HEADER = 'x-csrf-token';
 const CSRF_COOKIE = 'kscwc.csrf';
 
+/** Fired when the server ended this login (another device took over, or an admin signed it out). */
+export const SESSION_ENDED_EVENT = 'kscwc:session-ended';
+function announceSessionEnded(message: string) {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(SESSION_ENDED_EVENT, { detail: message }));
+}
+
 export class ApiClientError extends Error {
   code: string;
   status: number;
@@ -81,6 +87,7 @@ export async function api<T>(path: string, opts: Options = {}, retried = false):
       await fetchCsrf();
       return api<T>(path, opts, true);
     }
+    if ((data as ApiError).code === 'SESSION_ENDED') announceSessionEnded((data as ApiError).message);
     throw new ApiClientError(res.status, data as ApiError);
   }
   return data as T;

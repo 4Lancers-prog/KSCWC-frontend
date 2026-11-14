@@ -1,10 +1,11 @@
 // LoginPage.tsx — operator login wired to the API (handles pending + MFA).
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { clearSignedOutNote, peekSignedOutNote } from '@/lib/device';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthShell } from '@/components/layout/AuthShell';
-import { Button, Input, FormField, Alert } from '@/components/ui';
+import { Button, Input, FormField, Alert, PasswordInput } from '@/components/ui';
 import { loginForm, type LoginForm } from '@/lib/schemas';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiClientError } from '@/lib/api-client';
@@ -16,13 +17,16 @@ export function LoginPage() {
   const from = (location.state as { from?: string } | null)?.from;
   const { login } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
+  // Shown once if the previous login was ended by another device or an admin.
+  const [signedOutNote] = useState(() => peekSignedOutNote());
+  useEffect(() => clearSignedOutNote(), []); // show it once
   const [mfaRequired, setMfaRequired] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginForm) });
+  } = useForm<LoginForm>({ resolver: zodResolver(loginForm), mode: 'onTouched' });
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
@@ -51,6 +55,14 @@ export function LoginPage() {
           setFormError(`ನೋಂದಣಿ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ · ${err.message}`);
           return;
         }
+        if (err.code === 'ACTIVE_ON_OTHER_DEVICE') {
+          setFormError(`ಈ ಖಾತೆ ಇನ್ನೊಂದು ಸಾಧನದಲ್ಲಿ ಬಳಕೆಯಲ್ಲಿದೆ · ${err.message}`);
+          return;
+        }
+        if (err.code === 'DEVICE_LIMIT') {
+          setFormError(`ಸಾಧನಗಳ ಮಿತಿ ತಲುಪಿದೆ · ${err.message}`);
+          return;
+        }
         if (err.code === 'ACCOUNT_SUSPENDED') {
           setFormError(`ಖಾತೆ ಅಮಾನತುಗೊಂಡಿದೆ · ${err.message}`);
           return;
@@ -68,12 +80,12 @@ export function LoginPage() {
       subtitle={H.login_title}
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Link to="/forgot-password" className="font-medium text-navy-600 hover:underline">
+          <Link to="/forgot-password" className="font-medium text-navy-600 link">
             {L.forgot_password}
           </Link>
           <span>
             {L.no_account}{' '}
-            <Link to="/register" className="font-medium text-navy-600 hover:underline">
+            <Link to="/register" className="font-medium text-navy-600 link">
               {L.register}
             </Link>
           </span>
@@ -81,6 +93,9 @@ export function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        {signedOutNote && !formError && (
+          <Alert tone="info">ನೀವು ಸೈನ್ ಔಟ್ ಆಗಿದ್ದೀರಿ · {signedOutNote}</Alert>
+        )}
         {formError && <Alert tone="error">{formError}</Alert>}
 
         <FormField id="phone" label={L.field_phone} helper={H.field_phone} error={errors.phone?.message} required>
@@ -89,7 +104,7 @@ export function LoginPage() {
         </FormField>
 
         <FormField id="password" label={L.field_password} helper={H.field_password} error={errors.password?.message} required>
-          <Input id="password" type="password" autoComplete="current-password"
+          <PasswordInput id="password" autoComplete="current-password"
             invalid={!!errors.password} {...register('password')} />
         </FormField>
 

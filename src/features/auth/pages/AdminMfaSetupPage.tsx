@@ -91,7 +91,7 @@ export function AdminMfaSetupPage() {
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
           </FormField>
           <Button type="submit" block loading={busy} disabled={!secret}>ದೃಢೀಕರಿಸಿ · Verify & continue</Button>
-          <button type="button" className="w-full text-center text-sm text-navy-600 hover:underline"
+          <button type="button" className="w-full text-center text-sm text-navy-600 link"
             onClick={async () => { await logout(); navigate('/admin/login', { replace: true }); }}>
             ನಿರ್ಗಮನ · Sign out
           </button>

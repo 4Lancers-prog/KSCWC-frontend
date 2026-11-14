@@ -32,9 +32,9 @@ export function CommitteesPage() {
           {districts.length > 0 && (
             <div className="mb-6 flex flex-wrap items-center gap-2">
               <span className="text-sm text-slate2">ಜಿಲ್ಲೆ:</span>
-              <button onClick={() => setDistrict('')} className={`rounded-full px-3 py-1 text-sm ${!district ? 'bg-navy-600 text-white' : 'bg-white ring-1 ring-line'}`}>ಎಲ್ಲಾ</button>
+              <button onClick={() => setDistrict('')} className="chip" aria-pressed={!district}>ಎಲ್ಲಾ</button>
               {districts.map((d) => (
-                <button key={d} onClick={() => setDistrict(d)} className={`rounded-full px-3 py-1 text-sm ${district === d ? 'bg-navy-600 text-white' : 'bg-white ring-1 ring-line'}`}>{d}</button>
+                <button key={d} onClick={() => setDistrict(d)} className="chip" aria-pressed={district === d}>{d}</button>
               ))}
             </div>
           )}

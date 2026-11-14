@@ -8,6 +8,7 @@ import { customerForm, type CustomerForm } from '@/lib/schemas';
 import { ApiClientError } from '@/lib/api-client';
 import { rupeesToPaise } from '@/lib/money';
 import { useServices, useCustomer, useCreateCustomer, useUpdateCustomer } from '../customers.api';
+import { buttonClass } from '@/components/ui/Button';
 
 export function CustomerFormPage() {
   const { id } = useParams();
@@ -125,7 +126,7 @@ export function CustomerFormPage() {
           <Button type="submit" loading={isSubmitting}>
             {dupPrompt ? 'ಹೌದು, ಸೇರಿಸಿ · Add anyway' : isEdit ? 'ಉಳಿಸಿ · Save' : 'ಸೇರಿಸಿ · Add'}
           </Button>
-          <Link to="/app/customers" className="inline-flex h-11 items-center rounded-lg px-5 text-navy-700 ring-1 ring-inset ring-line hover:bg-mist">
+          <Link to="/app/customers" className={buttonClass('secondary')}>
             ರದ್ದು · Cancel
           </Link>
         </div>

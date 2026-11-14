@@ -21,9 +21,9 @@ export const registerForm = z
     centreName: z.string().trim().max(160).optional().or(z.literal('')),
     cscId: z.string().trim().max(80).optional().or(z.literal('')),
     password: z.string().min(12, 'Use at least 12 characters'),
-    confirm: z.string(),
+    confirm: z.string().min(1, 'ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತೆ ನಮೂದಿಸಿ · Please confirm your password'),
   })
-  .refine((v) => v.password === v.confirm, {
+  .refine((v) => !v.confirm || v.password === v.confirm, {
     message: 'Passwords do not match',
     path: ['confirm'],
   });
@@ -89,6 +89,6 @@ export const resetForm = z
   .object({
     token: z.string().min(10),
     password: z.string().min(12, 'Use at least 12 characters'),
-    confirm: z.string(),
+    confirm: z.string().min(1, 'ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತೆ ನಮೂದಿಸಿ · Please confirm your password'),
   })
-  .refine((v) => v.password === v.confirm, { message: 'Passwords do not match', path: ['confirm'] });
+  .refine((v) => !v.confirm || v.password === v.confirm, { message: 'Passwords do not match', path: ['confirm'] });

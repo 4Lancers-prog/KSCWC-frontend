@@ -38,7 +38,7 @@ export function CustomerDetailPage() {
 
   return (
     <div className="max-w-3xl">
-      <Link to="/app/customers" className="text-sm font-medium text-navy-600 hover:underline">← ಪಟ್ಟಿಗೆ</Link>
+      <Link to="/app/customers" className="text-sm font-medium text-navy-600 link">← ಪಟ್ಟಿಗೆ</Link>
       <div className="mt-3 flex items-center justify-between gap-3">
         <h1 className="font-display text-2xl text-navy-900">{customer.fullName}</h1>
         <StatusBadge label={`${meta.kn} · ${meta.en}`} tone={meta.tone} />

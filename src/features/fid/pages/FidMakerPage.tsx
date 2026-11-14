@@ -74,7 +74,7 @@ export function FidMakerPage() {
     <div>
       <div className="gold-rule mb-3" />
       <h1 className="font-display text-2xl text-navy-900">ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್ ತಯಾರಿಕೆ</h1>
-      <p className="text-sm text-slate2">FID card maker · Link <Link to="/app/fid/history" className="text-navy-600 hover:underline">ಇತಿಹಾಸ / History</Link></p>
+      <p className="text-sm text-slate2">FID card maker · Link <Link to="/app/fid/history" className="text-navy-600 link">ಇತಿಹಾಸ / History</Link></p>
 
       <div className="mt-5"><OfficialPortalCard /></div>
 

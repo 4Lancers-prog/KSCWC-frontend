@@ -28,7 +28,7 @@ export function FidHistoryPage() {
           <h1 className="font-display text-2xl text-navy-900">ಎಫ್‌ಐಡಿ ಇತಿಹಾಸ</h1>
           <p className="text-sm text-slate2">FID generation history</p>
         </div>
-        <Link to="/app/fid" className="text-sm font-medium text-navy-600 hover:underline">+ ಹೊಸ ಕಾರ್ಡ್</Link>
+        <Link to="/app/fid" className="text-sm font-medium text-navy-600 link">+ ಹೊಸ ಕಾರ್ಡ್</Link>
       </div>
 
       <div className="mt-5"><OfficialPortalCard /></div>
@@ -56,7 +56,7 @@ export function FidHistoryPage() {
                     <Td>{formatPaise(g.chargePaise)}</Td>
                     <Td>
                       {g.status === 'SUCCEEDED' ? (
-                        <button className="font-medium text-navy-600 hover:underline"
+                        <button className="font-medium text-navy-600 link"
                           onClick={() => downloadFile(`/fid-generations/${g.id}/download`, `fid-${g.id}.pdf`)}>
                           ಡೌನ್‌ಲೋಡ್ (ಉಚಿತ)
                         </button>

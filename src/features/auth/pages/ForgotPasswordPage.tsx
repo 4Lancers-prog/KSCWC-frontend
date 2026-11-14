@@ -30,7 +30,7 @@ export function ForgotPasswordPage() {
     <AuthShell
       title="ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ"
       subtitle="Reset your password"
-      footer={<Link to="/login" className="font-medium text-navy-600 hover:underline">{L.login}</Link>}
+      footer={<Link to="/login" className="font-medium text-navy-600 link">{L.login}</Link>}
     >
       {done ? (
         <Alert tone="success">{done}</Alert>
