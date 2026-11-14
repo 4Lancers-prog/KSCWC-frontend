@@ -1,6 +1,7 @@
 // TrainingPage.tsx — public training registration.
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Select, FormField, Alert } from '@/components/ui';
 import { FormShell } from '../FormShell';
@@ -12,11 +13,12 @@ import type { z } from 'zod';
 type Form = z.infer<typeof trainingFormSchema>;
 
 export function TrainingPage() {
+  const { user } = useAuth(); // logged-in operator: prefill what we already know
   const submit = useSubmitApplication('training');
   const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(trainingFormSchema), defaultValues: { mode: 'ONLINE' },
+    resolver: zodResolver(trainingFormSchema), defaultValues: {name: user?.fullName ?? '', phone: user?.phone ?? '',  mode: 'ONLINE' },
   });
 
   const onSubmit = handleSubmit(async (v) => {

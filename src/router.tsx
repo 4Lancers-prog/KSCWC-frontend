@@ -65,10 +65,16 @@ export const router = createBrowserRouter([
       { path: '/government-links', element: <GovernmentLinksPage /> },
       { path: '/downloads', element: <DownloadsPage /> },
       { path: '/contact', element: <ContactPage /> },
-      { path: '/forms/insurance', element: <InsuranceRequestPage /> },
-      { path: '/forms/membership', element: <MembershipPage /> },
-      { path: '/forms/training', element: <TrainingPage /> },
-      { path: '/forms/grievance', element: <GrievancePage /> },
+      // Application forms: logged-in operators only (the API enforces this too).
+      {
+        element: <RequireAuth />,
+        children: [
+          { path: '/forms/insurance', element: <InsuranceRequestPage /> },
+          { path: '/forms/membership', element: <MembershipPage /> },
+          { path: '/forms/training', element: <TrainingPage /> },
+          { path: '/forms/grievance', element: <GrievancePage /> },
+        ],
+      },
     ],
   },
   { path: '/login', element: <LoginPage /> },

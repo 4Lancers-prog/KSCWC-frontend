@@ -1,6 +1,7 @@
 // MembershipPage.tsx — public membership application.
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, FormField, Alert } from '@/components/ui';
 import { FormShell } from '../FormShell';
@@ -12,10 +13,11 @@ import type { z } from 'zod';
 type Form = z.infer<typeof membershipFormSchema>;
 
 export function MembershipPage() {
+  const { user } = useAuth(); // logged-in operator: prefill what we already know
   const submit = useSubmitApplication('membership');
   const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: zodResolver(membershipFormSchema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: zodResolver(membershipFormSchema), defaultValues: {operatorName: user?.fullName ?? '', centreName: user?.centreName ?? '', phone: user?.phone ?? '', email: user?.email ?? ''} });
 
   const onSubmit = handleSubmit(async (v) => {
     setErr(null);

@@ -1,6 +1,7 @@
 // GrievancePage.tsx — public grievance/suggestion form (returns a ticket code).
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, FormField, Alert } from '@/components/ui';
 import { FormShell } from '../FormShell';
@@ -12,10 +13,11 @@ import type { z } from 'zod';
 type Form = z.infer<typeof grievanceFormSchema>;
 
 export function GrievancePage() {
+  const { user } = useAuth(); // logged-in operator: prefill what we already know
   const submit = useSubmitApplication('grievance');
   const [ticket, setTicket] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: zodResolver(grievanceFormSchema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({ resolver: zodResolver(grievanceFormSchema), defaultValues: {name: user?.fullName ?? '', phone: user?.phone ?? ''} });
 
   const onSubmit = handleSubmit(async (v) => {
     setErr(null);

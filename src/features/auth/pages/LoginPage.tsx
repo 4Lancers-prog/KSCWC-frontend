@@ -39,7 +39,7 @@ export function LoginPage() {
       // Staff land on the admin console; operators on their dashboard (or the page they came from).
       if (mfaSetupRequired) navigate('/admin/mfa-setup', { replace: true });
       else if (user.role !== 'USER') navigate('/admin', { replace: true });
-      else navigate(from && from.startsWith('/app') ? from : '/app', { replace: true });
+      else navigate(from && (from.startsWith('/app') || from.startsWith('/forms/')) ? from : '/app', { replace: true });
     } catch (err) {
       if (err instanceof ApiClientError) {
         if (err.code === 'MFA_REQUIRED') {
@@ -93,6 +93,9 @@ export function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        {from?.startsWith('/forms/') && !formError && (
+          <Alert tone="info">ಅರ್ಜಿ ಸಲ್ಲಿಸಲು ನಿಮ್ಮ ಸಂಚಾಲಕ ಖಾತೆಯಿಂದ ಪ್ರವೇಶಿಸಿ · Log in with your operator account to apply. You'll return to the form.</Alert>
+        )}
         {signedOutNote && !formError && (
           <Alert tone="info">ನೀವು ಸೈನ್ ಔಟ್ ಆಗಿದ್ದೀರಿ · {signedOutNote}</Alert>
         )}
