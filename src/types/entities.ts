@@ -91,7 +91,9 @@ export interface CommitteeMember {
 export interface GovLink {
   id: string;
   title: string;
-  url: string;
+  /** null for visitors who are not logged in — opening a portal needs a login */
+  url: string | null;
+  locked?: boolean;
   description: string | null;
   category?: 'STATE' | 'CENTRAL' | 'OTHER';
   featured?: boolean;

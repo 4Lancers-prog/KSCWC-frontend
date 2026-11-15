@@ -93,6 +93,9 @@ export function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        {from === '/app/portals' && !formError && (
+          <Alert tone="info">ಸರ್ಕಾರಿ ಪೋರ್ಟಲ್‌ಗಳನ್ನು ತೆರೆಯಲು ಪ್ರವೇಶಿಸಿ · Log in to open the government portals. You’ll go straight to them.</Alert>
+        )}
         {from?.startsWith('/forms/') && !formError && (
           <Alert tone="info">ಅರ್ಜಿ ಸಲ್ಲಿಸಲು ನಿಮ್ಮ ಸಂಚಾಲಕ ಖಾತೆಯಿಂದ ಪ್ರವೇಶಿಸಿ · Log in with your operator account to apply. You'll return to the form.</Alert>
         )}
