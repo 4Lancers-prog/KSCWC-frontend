@@ -50,6 +50,7 @@ import { ApplicationsAdmin } from '@/features/admin/pages/ApplicationsAdmin';
 import { AuditLogs } from '@/features/admin/pages/AuditLogs';
 import { AdminCustomers } from '@/features/admin/pages/AdminCustomers';
 import { AdminMfaSetupPage } from '@/features/auth/pages/AdminMfaSetupPage';
+import { PortalsPage } from '@/features/dashboard/pages/PortalsPage';
 import { MyApplicationsPage } from '@/features/applications/pages/MyApplicationsPage';
 import { NotFoundPage } from '@/features/public-content/pages/NotFoundPage';
 
@@ -108,6 +109,7 @@ export const router = createBrowserRouter([
           { path: 'tools/b2-photo', element: <B2ConverterPage /> },
           { path: 'tools/passport-photo', element: <PassportPhotoPage /> },
           { path: 'applications', element: <MyApplicationsPage /> },
+          { path: 'portals', element: <PortalsPage /> },
         ],
       },
     ],

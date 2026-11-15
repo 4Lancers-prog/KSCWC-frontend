@@ -11,6 +11,7 @@ const GROUPS: SideNavGroup[] = [
     title: 'ಮುಖ್ಯ · Main',
     items: [
       { to: '/app', kn: L.dashboard, en: 'Dashboard', end: true },
+      { to: '/app/portals', kn: 'ಸರ್ಕಾರಿ ಪೋರ್ಟಲ್‌ಗಳು', en: 'Govt service portals' },
       { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers' },
       { to: '/app/reports', kn: 'ವರದಿಗಳು', en: 'Reports' },
       { to: '/app/wallet', kn: 'ವಾಲೆಟ್', en: 'Wallet & top-up' },

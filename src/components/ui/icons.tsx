@@ -27,6 +27,8 @@ export const Icons = {
   grid: () => (<Svg><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></Svg>),
   people: () => (<Svg><circle cx="12" cy="7" r="3" /><circle cx="5" cy="10" r="2" /><circle cx="19" cy="10" r="2" /><path d="M7 21v-1a5 5 0 0 1 10 0v1" /><path d="M2 20v-.5A3 3 0 0 1 5 17M22 20v-.5a3 3 0 0 0-3-2.5" /></Svg>),
   alert: () => (<Svg><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16h.01" /></Svg>),
+  landmark: () => (<Svg><path d="M3 21h18" /><path d="M5 21V10M9 21V10M15 21V10M19 21V10" /><path d="M2 10 12 3l10 7z" /></Svg>),
+  external: () => (<Svg strokeWidth={2}><path d="M14 4h6v6" /><path d="M20 4 10 14" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></Svg>),
   chevron: () => (<Svg strokeWidth={2.25}><path d="m9 6 6 6-6 6" /></Svg>),
 };
 export type IconName = keyof typeof Icons;

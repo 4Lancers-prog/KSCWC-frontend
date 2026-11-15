@@ -93,6 +93,8 @@ export interface GovLink {
   title: string;
   url: string;
   description: string | null;
+  category?: 'STATE' | 'CENTRAL' | 'OTHER';
+  featured?: boolean;
   sortOrder?: number;
   isActive?: boolean;
 }

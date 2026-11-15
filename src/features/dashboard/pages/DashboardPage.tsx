@@ -1,12 +1,13 @@
 // DashboardPage.tsx — operator landing: wallet, pending items waiting on the council, latest news.
 import { Link } from 'react-router-dom';
-import { ActionTile, Icons } from '@/components/ui';
+import { ActionTile, Icons, buttonClass } from '@/components/ui';
 import type { IconName } from '@/components/ui/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate, formatPaise } from '@/lib/format';
 import { useWallet, useMyManualTopups } from '@/features/wallet/wallet.api';
 import { useMyApplications } from '@/features/applications/applications.api';
-import { usePublicAnnouncements } from '@/features/public-content/public-content.api';
+import { usePublicAnnouncements, usePublicGovLinks } from '@/features/public-content/public-content.api';
+import { PortalTile } from '@/features/public-content/components/PortalLinks';
 
 const TILES: { to: string; kn: string; en: string; hint: string; icon: IconName }[] = [
   { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers', hint: 'ದಾಖಲೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ', icon: 'users' },
@@ -27,6 +28,13 @@ export function DashboardPage() {
   const topups = useMyManualTopups(1);
   const apps = useMyApplications(isOperator);
   const news = usePublicAnnouncements();
+  const portals = usePublicGovLinks();
+  // dashboard shows the admin's "featured" portals (or the first 8 if none are featured)
+  const featured = (() => {
+    const all = portals.data ?? [];
+    const f = all.filter((l) => l.featured);
+    return (f.length ? f : all).slice(0, 8);
+  })();
 
   const pendingTopups = topups.data?.items.filter((t) => t.status === 'PENDING').length ?? 0;
   const recentDecided = topups.data?.items.find((t) => t.status !== 'PENDING');
@@ -89,6 +97,25 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* The portals operators use all day — right under the wallet, before everything else. */}
+      <section className="mt-10" aria-labelledby="portals-h">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="portals-h" className="font-display text-lg text-navy-900">ಸರ್ಕಾರಿ ಸೇವಾ ಪೋರ್ಟಲ್‌ಗಳು · Government service portals</h2>
+            <p className="text-sm text-slate2">ಒತ್ತಿದರೆ ಅಧಿಕೃತ ತಾಣ ಹೊಸ ಟ್ಯಾಬ್‌ನಲ್ಲಿ ತೆರೆಯುತ್ತದೆ · Opens the official site in a new tab</p>
+          </div>
+          <Link to="/app/portals" className={buttonClass('secondary', 'sm')}>ಎಲ್ಲಾ ಪೋರ್ಟಲ್‌ಗಳು · All portals</Link>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+          {portals.isLoading
+            ? Array.from({ length: 4 }, (_, i) => <div key={i} className="h-[88px] animate-pulse rounded-xl2 bg-navy-50" />)
+            : featured.map((l) => <PortalTile key={l.id} link={l} compact />)}
+        </div>
+        {!portals.isLoading && featured.length === 0 && (
+          <p className="info-panel mt-3 text-sm text-slate2">ಇನ್ನೂ ಯಾವುದೇ ಪೋರ್ಟಲ್ ಇಲ್ಲ · No portals yet — the admin can add them.</p>
+        )}
+      </section>
 
       <h2 className="mt-10 font-display text-lg text-navy-900">ಕೆಲಸಗಳು · Tasks</h2>
       <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
