@@ -21,7 +21,6 @@ const GROUPS: SideNavGroup[] = [
   {
     title: 'ಸಾಧನಗಳು · Tools',
     items: [
-      { to: '/app/fid', kn: 'ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್', en: 'FID card maker' },
       { to: '/app/tools/b2-photo', kn: 'B2 ಫೋಟೋ', en: 'B2 photo converter' },
       { to: '/app/tools/passport-photo', kn: 'ಪಾಸ್‌ಪೋರ್ಟ್ ಫೋಟೋ', en: 'Passport photo' },
     ],

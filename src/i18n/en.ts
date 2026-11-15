@@ -18,7 +18,7 @@ export const en: Record<I18nKey, string> = {
 
   hero_title: 'A trusted digital platform for service-centre operators',
   hero_body:
-    'Customer records, reports, wallet and FID card generation — all in one secure place.',
+    'Customer records, reports, wallet and government service portals — all in one secure place.',
   hero_cta_primary: 'Operator login',
   hero_cta_secondary: 'New registration',
   hero_note:

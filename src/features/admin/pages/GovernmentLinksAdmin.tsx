@@ -1,6 +1,6 @@
 // GovernmentLinksAdmin.tsx — add/deactivate government service links (https only).
 import { useState } from 'react';
-import { Button, Input, Table, Th, Td, Spinner, Alert, FormField, Modal, Select } from '@/components/ui';
+import { Button, Input, Table, Th, Td, Spinner, Alert, FormField, Modal, Select, buttonClass } from '@/components/ui';
 import { useAdminLinks, useLinkMutations } from '../admin.api';
 import type { GovLink } from '@/types/entities';
 
@@ -13,7 +13,9 @@ const CATEGORIES: { v: GovCategory; label: string }[] = [
 
 export function GovernmentLinksAdmin() {
   const { data, isLoading } = useAdminLinks();
-  const { create, update, deactivate, reactivate } = useLinkMutations();
+  const { create, update, deactivate, reactivate, setImage, removeImage } = useLinkMutations();
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [fileKey, setFileKey] = useState(0); // resets the file input after adding
   const EMPTY = { title: '', url: '', description: '', category: 'STATE' as GovCategory, featured: true };
   const [form, setForm] = useState(EMPTY);
   const [err, setErr] = useState<string | null>(null);
@@ -46,11 +48,14 @@ export function GovernmentLinksAdmin() {
     e.preventDefault();
     setErr(null);
     try {
-      await create.mutateAsync({
+      const { link } = await create.mutateAsync({
         title: form.title, url: form.url, description: form.description || undefined,
         category: form.category, featured: form.featured,
       });
+      if (newImage) await setImage.mutateAsync({ id: link.id, file: newImage });
       setForm(EMPTY);
+      setNewImage(null);
+      setFileKey((k) => k + 1);
     } catch (e2) { setErr(e2 instanceof Error ? e2.message : 'Could not save'); }
   };
 
@@ -79,7 +84,12 @@ export function GovernmentLinksAdmin() {
             onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
           ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ನಲ್ಲಿ ತೋರಿಸಿ · Show on operator dashboard
         </label>
-        <div className="sm:col-span-2"><Button type="submit" loading={create.isPending}>ಸೇರಿಸಿ · Add</Button></div>
+        <FormField id="img" label="ಲೋಗೋ / ಫೋಟೋ" helper="Optional · PNG, JPG or WebP, up to 2 MB">
+          <input key={fileKey} id="img" type="file" accept="image/png,image/jpeg,image/webp"
+            onChange={(e) => setNewImage(e.target.files?.[0] ?? null)}
+            className="block w-full rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
+        </FormField>
+        <div className="sm:col-span-2"><Button type="submit" loading={create.isPending || setImage.isPending}>ಸೇರಿಸಿ · Add</Button></div>
       </form>
 
       <div className="mt-6">
@@ -91,7 +101,14 @@ export function GovernmentLinksAdmin() {
             <tbody>
               {data.map((l) => (
                 <tr key={l.id}>
-                  <Td className="text-navy-900">{l.title}</Td>
+                  <Td className="text-navy-900">
+                    <span className="flex items-center gap-2">
+                      {l.imageUrl
+                        ? <img src={l.imageUrl} alt="" className="h-8 w-8 shrink-0 rounded-md border border-line bg-white object-contain" />
+                        : <span className="h-8 w-8 shrink-0 rounded-md border border-dashed border-line" aria-hidden />}
+                      {l.title}
+                    </span>
+                  </Td>
                   <Td className="max-w-[260px] truncate">
                     {l.url
                       ? <a href={l.url} target="_blank" rel="noopener noreferrer" className="text-navy-600 link">{l.url}</a>
@@ -140,6 +157,29 @@ export function GovernmentLinksAdmin() {
               <input type="checkbox" name="featured" className="h-5 w-5 accent-navy-600" defaultChecked={!!edit.featured} />
               ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ನಲ್ಲಿ ತೋರಿಸಿ · Show on operator dashboard
             </label>
+            <div className="rounded-lg border border-line p-3">
+              <p className="text-sm font-medium text-navy-900">ಲೋಗೋ / ಫೋಟೋ <span className="text-xs font-normal text-slate2">· PNG, JPG or WebP, up to 2 MB</span></p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                {edit.imageUrl
+                  ? <img src={edit.imageUrl} alt="" className="h-16 w-16 rounded-lg border border-line bg-white object-contain" />
+                  : <span className="grid h-16 w-16 place-items-center rounded-lg border border-dashed border-line text-xs text-slate2">ಇಲ್ಲ</span>}
+                <label className={buttonClass('secondary', 'sm')}>
+                  {edit.imageUrl ? 'ಬದಲಿಸಿ · Replace' : 'ಅಪ್‌ಲೋಡ್ · Upload'}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0]; if (!f) return;
+                      try { const r = await setImage.mutateAsync({ id: edit.id, file: f }); setEdit(r.link); }
+                      catch (e2) { setEditErr(e2 instanceof Error ? e2.message : 'Upload failed'); }
+                    }} />
+                </label>
+                {edit.imageUrl && (
+                  <Button type="button" size="sm" variant="ghost" loading={removeImage.isPending}
+                    onClick={async () => { const r = await removeImage.mutateAsync(edit.id); setEdit(r.link); }}>
+                    ತೆಗೆದುಹಾಕಿ · Remove
+                  </Button>
+                )}
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button type="submit" loading={update.isPending}>ಉಳಿಸಿ · Save</Button>
               <Button type="button" variant="secondary" onClick={() => setEdit(null)}>ರದ್ದು</Button>

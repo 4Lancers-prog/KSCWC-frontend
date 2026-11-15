@@ -54,15 +54,6 @@ export interface WalletTxn {
   createdAt: string;
 }
 
-export interface FidGeneration {
-  id: string;
-  status: 'QUEUED' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
-  chargePaise: number;
-  createdAt: string;
-  completedAt: string | null;
-  downloadUrl: string | null;
-}
-
 export interface PublicAnnouncement {
   id: string;
   title: string;
@@ -94,6 +85,8 @@ export interface GovLink {
   /** null for visitors who are not logged in — opening a portal needs a login */
   url: string | null;
   locked?: boolean;
+  /** logo/photo shown on the tile (served by the API), or null */
+  imageUrl?: string | null;
   description: string | null;
   category?: 'STATE' | 'CENTRAL' | 'OTHER';
   featured?: boolean;

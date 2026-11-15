@@ -2,6 +2,7 @@
 // portal in a new tab. Used on the operator dashboard, the operator "Govt portals" page and the
 // public links page. Links come from the admin-managed list (https only).
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Icons, buttonClass } from '@/components/ui';
 import type { GovLink } from '@/types/entities';
 
@@ -15,6 +16,17 @@ function hostOf(url: string) {
   try { return new URL(url).host.replace(/^www\./, ''); } catch { return url; }
 }
 
+function PortalBadge({ link }: { link: GovLink }) {
+  return link.imageUrl ? (
+    <img src={link.imageUrl} alt="" loading="lazy" decoding="async"
+      className="h-12 w-12 shrink-0 rounded-xl border border-line bg-white object-contain p-0.5" />
+  ) : (
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-700">
+      <Icons.landmark />
+    </span>
+  );
+}
+
 export function PortalTile({ link, compact }: { link: GovLink; compact?: boolean }) {
   const [kn, ...rest] = link.title.split(' · ');
   const en = rest.join(' · ');
@@ -24,9 +36,7 @@ export function PortalTile({ link, compact }: { link: GovLink; compact?: boolean
       <Link to="/login" state={{ from: '/app/portals' }} className="tile group !p-4"
         aria-label={`${link.title} — log in to open`}>
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-700">
-            <Icons.landmark />
-          </span>
+          <PortalBadge link={link} />
           <div className="min-w-0 flex-1">
             <p className="font-display leading-snug text-navy-900">{kn}</p>
             {en && <p className="text-sm font-medium leading-snug text-navy-700">{en}</p>}
@@ -44,9 +54,7 @@ export function PortalTile({ link, compact }: { link: GovLink; compact?: boolean
     <a href={link.url} target="_blank" rel="noopener noreferrer" className="tile group !p-4"
       aria-label={`${link.title} — opens the official site in a new tab`}>
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-navy-50 text-navy-700">
-          <Icons.landmark />
-        </span>
+        <PortalBadge link={link} />
         <div className="min-w-0 flex-1">
           {/* "ಸೇವಾ ಸಿಂಧು · Seva Sindhu" → Kannada name on top, English below (no word-by-word wrapping) */}
           <p className="font-display leading-snug text-navy-900">{kn}</p>
@@ -62,8 +70,11 @@ export function PortalTile({ link, compact }: { link: GovLink; compact?: boolean
 }
 
 /** All active portals, grouped: Karnataka first, then Government of India. */
-export function PortalGroups({ links, wide }: { links: GovLink[]; wide?: boolean }) {
-  const locked = links.some((l) => !l.url);
+export function PortalGroups({ links: all, wide }: { links: GovLink[]; wide?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  // Logged in: never offer "log in" again — a link without an address just isn't shown.
+  const links = isAuthenticated ? all.filter((l) => l.url) : all;
+  const locked = !isAuthenticated && links.some((l) => !l.url);
   return (
     <div className="space-y-8">
       {locked && (

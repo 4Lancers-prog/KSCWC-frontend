@@ -40,10 +40,6 @@ export function AdminLayout() {
         { to: '/admin/documents', kn: 'ದಾಖಲೆಗಳು', en: 'Documents' },
       ],
     },
-    {
-      title: 'ವ್ಯವಸ್ಥೆ · System',
-      items: [{ to: '/admin/settings', kn: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', en: 'Settings' }],
-    },
   ];
 
   return (

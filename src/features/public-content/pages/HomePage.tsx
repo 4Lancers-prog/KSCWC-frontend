@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { L, H } from '@/i18n';
 import { Emblem } from '@/components/Emblem';
 import { buttonClass } from '@/components/ui';
+import { useAuth } from '@/hooks/useAuth';
 
 const SERVICES: { kn: string; en: string }[] = [
   { kn: 'ಆಧಾರ್ ನವೀಕರಣ', en: 'Aadhaar update' },
@@ -17,7 +18,6 @@ const CAPABILITIES = [
   { kn: 'ಗ್ರಾಹಕರ ದಾಖಲೆಗಳು', en: 'Customer records' },
   { kn: 'ಸೇವಾವಾರು ವರದಿಗಳು', en: 'Service-wise reports' },
   { kn: 'ಪ್ರಿಪೇಯ್ಡ್ ವಾಲೆಟ್', en: 'Prepaid wallet' },
-  { kn: 'ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್ ತಯಾರಿಕೆ', en: 'FID card generation' },
 ];
 
 const STEPS = [
@@ -27,6 +27,9 @@ const STEPS = [
 ];
 
 export function HomePage() {
+  const { isAuthenticated, user } = useAuth();
+  const isOperator = user?.role === 'USER';
+  const home = isOperator ? '/app' : '/admin';
   return (
     <>
       {/* Hero */}
@@ -40,12 +43,24 @@ export function HomePage() {
             <p className="mt-4 max-w-xl text-lg text-slate2">{L.hero_body}</p>
             <p className="mt-2 max-w-xl text-sm text-slate2/80">{H.hero_body}</p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link to="/login" className={buttonClass('primary', 'lg')}>
-                {L.hero_cta_primary}
-              </Link>
-              <Link to="/register" className={buttonClass('secondary', 'lg')}>
-                {L.hero_cta_secondary}
-              </Link>
+              {isAuthenticated ? (
+                // already logged in: no "log in" / "register" — go straight to work
+                <>
+                  <Link to={home} className={buttonClass('primary', 'lg')}>ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ · Go to dashboard</Link>
+                  {isOperator && (
+                    <Link to="/app/portals" className={buttonClass('secondary', 'lg')}>ಸರ್ಕಾರಿ ಪೋರ್ಟಲ್‌ಗಳು · Govt portals</Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className={buttonClass('primary', 'lg')}>
+                    {L.hero_cta_primary}
+                  </Link>
+                  <Link to="/register" className={buttonClass('secondary', 'lg')}>
+                    {L.hero_cta_secondary}
+                  </Link>
+                </>
+              )}
               <Link to="/about" className="link px-2 py-3 text-[15px] text-navy-700">
                 ಪರಿಷತ್ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು
               </Link>
@@ -114,6 +129,8 @@ export function HomePage() {
       </section>
 
       {/* Closing CTA */}
+      {/* the "register your centre" banner is for visitors only */}
+      {!isAuthenticated && (
       <section className="bg-navy-900">
         <div className="container-content flex flex-col items-start gap-4 py-12 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -125,6 +142,7 @@ export function HomePage() {
           </Link>
         </div>
       </section>
+      )}
     </>
   );
 }

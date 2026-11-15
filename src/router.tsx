@@ -26,8 +26,6 @@ import { CustomerFormPage } from '@/features/customers/pages/CustomerFormPage';
 import { CustomerDetailPage } from '@/features/customers/pages/CustomerDetailPage';
 import { MyReportPage } from '@/features/reports/pages/MyReportPage';
 import { WalletPage } from '@/features/wallet/pages/WalletPage';
-import { FidMakerPage } from '@/features/fid/pages/FidMakerPage';
-import { FidHistoryPage } from '@/features/fid/pages/FidHistoryPage';
 import { B2ConverterPage } from '@/features/tools/pages/B2ConverterPage';
 import { PassportPhotoPage } from '@/features/tools/pages/PassportPhotoPage';
 import { InsuranceRequestPage } from '@/features/applications/pages/InsuranceRequestPage';
@@ -45,7 +43,6 @@ import { GovernmentLinksAdmin } from '@/features/admin/pages/GovernmentLinksAdmi
 import { DocumentsAdmin } from '@/features/admin/pages/DocumentsAdmin';
 import { WalletManagement } from '@/features/admin/pages/WalletManagement';
 import { ManualTopups } from '@/features/admin/pages/ManualTopups';
-import { Settings as AdminSettings } from '@/features/admin/pages/Settings';
 import { ApplicationsAdmin } from '@/features/admin/pages/ApplicationsAdmin';
 import { AuditLogs } from '@/features/admin/pages/AuditLogs';
 import { AdminCustomers } from '@/features/admin/pages/AdminCustomers';
@@ -104,8 +101,6 @@ export const router = createBrowserRouter([
           },
           { path: 'reports', element: <MyReportPage /> },
           { path: 'wallet', element: <WalletPage /> },
-          { path: 'fid', element: <FidMakerPage /> },
-          { path: 'fid/history', element: <FidHistoryPage /> },
           { path: 'tools/b2-photo', element: <B2ConverterPage /> },
           { path: 'tools/passport-photo', element: <PassportPhotoPage /> },
           { path: 'applications', element: <MyApplicationsPage /> },
@@ -131,7 +126,6 @@ export const router = createBrowserRouter([
           { path: 'documents', element: <DocumentsAdmin /> },
           { path: 'wallets', element: <WalletManagement /> },
           { path: 'manual-topups', element: <ManualTopups /> },
-          { path: 'settings', element: <AdminSettings /> },
           { path: 'applications', element: <ApplicationsAdmin /> },
           { path: 'audit', element: <AuditLogs /> },
         ],

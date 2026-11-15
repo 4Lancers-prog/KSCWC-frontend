@@ -11,7 +11,6 @@ import { PortalTile } from '@/features/public-content/components/PortalLinks';
 
 const TILES: { to: string; kn: string; en: string; hint: string; icon: IconName }[] = [
   { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers', hint: 'ದಾಖಲೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ', icon: 'users' },
-  { to: '/app/fid', kn: 'ಎಫ್‌ಐಡಿ ಕಾರ್ಡ್', en: 'FID card', hint: '₹5 ಪ್ರತಿ ಕಾರ್ಡ್', icon: 'idCard' },
   { to: '/app/reports', kn: 'ವರದಿಗಳು', en: 'Reports', hint: 'ಸೇವಾವಾರು ವರದಿ', icon: 'chart' },
   { to: '/app/wallet', kn: 'ವಾಲೆಟ್', en: 'Wallet & top-up', hint: 'ಬ್ಯಾಲೆನ್ಸ್ ಮತ್ತು ಟಾಪ್-ಅಪ್', icon: 'wallet' },
   { to: '/app/applications', kn: 'ನನ್ನ ಅರ್ಜಿಗಳು', en: 'My applications', hint: 'ದೂರು / ವಿಮೆ / ತರಬೇತಿ ಸ್ಥಿತಿ', icon: 'inbox' },
@@ -31,7 +30,7 @@ export function DashboardPage() {
   const portals = usePublicGovLinks();
   // dashboard shows the admin's "featured" portals (or the first 8 if none are featured)
   const featured = (() => {
-    const all = portals.data ?? [];
+    const all = (portals.data ?? []).filter((l) => l.url); // logged in: only openable portals
     const f = all.filter((l) => l.featured);
     return (f.length ? f : all).slice(0, 8);
   })();

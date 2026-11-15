@@ -11,7 +11,6 @@ const LINKS: { to: string; kn: string; en: string; icon: IconName }[] = [
   { to: '/admin/committees', kn: 'ನಾಯಕತ್ವ / ಸಮಿತಿಗಳು', en: 'Leadership & committees', icon: 'people' },
   { to: '/admin/links', kn: 'ಸರ್ಕಾರಿ ಕೊಂಡಿಗಳು', en: 'Government links', icon: 'link' },
   { to: '/admin/documents', kn: 'ದಾಖಲೆಗಳು', en: 'Documents', icon: 'file' },
-  { to: '/admin/settings', kn: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', en: 'Settings (FID portal link)', icon: 'settings' },
   { to: '/admin/audit', kn: 'ಆಡಿಟ್ ಲಾಗ್‌ಗಳು', en: 'Audit logs', icon: 'shield' },
 ];
 

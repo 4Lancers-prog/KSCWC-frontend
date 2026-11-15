@@ -103,7 +103,19 @@ export function useLinkMutations() {
   const qc = useQueryClient();
   const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['admin-links'] }); toast(msg, 'success'); };
   return {
-    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api('/admin/government-links', { method: 'POST', body: b }), onSuccess: done('ಕೊಂಡಿ ಸೇರಿಸಲಾಗಿದೆ') }),
+    create: useMutation({ mutationFn: (b: Record<string, unknown>) => api<{ link: GovLink }>('/admin/government-links', { method: 'POST', body: b }), onSuccess: done('ಕೊಂಡಿ ಸೇರಿಸಲಾಗಿದೆ') }),
+    setImage: useMutation({
+      mutationFn: ({ id, file }: { id: string; file: File }) => {
+        const fd = new FormData();
+        fd.append('image', file);
+        return apiForm<{ link: GovLink }>(`/admin/government-links/${id}/image`, fd);
+      },
+      onSuccess: done('ಚಿತ್ರ ಉಳಿಸಲಾಗಿದೆ · Image saved'),
+    }),
+    removeImage: useMutation({
+      mutationFn: (id: string) => api<{ link: GovLink }>(`/admin/government-links/${id}/image`, { method: 'DELETE' }),
+      onSuccess: done('ಚಿತ್ರ ತೆಗೆದುಹಾಕಲಾಗಿದೆ · Image removed'),
+    }),
     update: useMutation({ mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/government-links/${id}`, { method: 'PATCH', body }), onSuccess: done('ಕೊಂಡಿ ನವೀಕರಿಸಲಾಗಿದೆ') }),
     deactivate: useMutation({ mutationFn: (id: string) => api(`/admin/government-links/${id}/deactivate`, { method: 'POST' }), onSuccess: done('ಕೊಂಡಿ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ') }),
     reactivate: useMutation({ mutationFn: (id: string) => api(`/admin/government-links/${id}`, { method: 'PATCH', body: { isActive: true } }), onSuccess: done('ಕೊಂಡಿ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ') }),
@@ -260,17 +272,6 @@ export function useSetPaymentQr() {
   });
 }
 
-// ── FID official portal link ──
-export function useSetFidPortalLink() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (url: string) => api<{ url: string }>('/admin/fid/portal-link', { method: 'PUT', body: { url } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fid-portal-link'] });
-      toast('ಎಫ್‌ಐಡಿ ಪೋರ್ಟಲ್ ಲಿಂಕ್ ಉಳಿಸಲಾಗಿದೆ', 'success');
-    },
-  });
-}
 
 // ── Customers across all operators + the admin report ──
 export interface AdminCustomer {

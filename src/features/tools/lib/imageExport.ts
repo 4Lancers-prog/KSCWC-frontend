@@ -40,11 +40,29 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   });
 }
 
-/** Trigger a browser download of a canvas as a JPEG. */
-export function downloadCanvasJpg(canvas: HTMLCanvasElement, filename: string, quality = 0.95) {
+/**
+ * Write the print resolution into a JPEG's JFIF header (browsers save "no units, 1:1"), so photo
+ * printers and Windows print the sheet at its real size instead of guessing 72/96 DPI.
+ */
+function withJpegDpi(dataUrl: string, dpi: number): string {
+  const b64 = dataUrl.split(',')[1] ?? '';
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  // JFIF APP0: FF D8 FF E0 len(2) "JFIF\0" ver(2) units(1) Xdensity(2) Ydensity(2)
+  const isJfif = bytes[2] === 0xff && bytes[3] === 0xe0 && String.fromCharCode(...bytes.slice(6, 10)) === 'JFIF';
+  if (!isJfif) return dataUrl;
+  bytes[13] = 1; // units: dots per inch
+  bytes[14] = dpi >> 8; bytes[15] = dpi & 0xff;
+  bytes[16] = dpi >> 8; bytes[17] = dpi & 0xff;
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return `data:image/jpeg;base64,${btoa(bin)}`;
+}
+
+/** Trigger a browser download of a canvas as a JPEG (tagged with its print DPI). */
+export function downloadCanvasJpg(canvas: HTMLCanvasElement, filename: string, quality = 0.95, dpi = 300) {
   const a = document.createElement('a');
   a.download = filename;
-  a.href = canvas.toDataURL('image/jpeg', quality);
+  a.href = withJpegDpi(canvas.toDataURL('image/jpeg', quality), dpi);
   a.click();
 }
 

@@ -44,14 +44,6 @@ export const customerForm = z.object({
 });
 export type CustomerForm = z.infer<typeof customerForm>;
 
-export const fidForm = z.object({
-  farmerName: z.string().trim().min(1, 'Required').max(120),
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
-  fidNumber: z.string().trim().min(1, 'Required').max(40).regex(/^[A-Za-z0-9/-]+$/, 'Letters, numbers, / and - only'),
-  address: z.string().trim().min(1, 'Required').max(500),
-  maskedAadhaar: z.string().trim().regex(/^\d{4}$/, 'Last 4 digits only').optional().or(z.literal('')),
-});
-export type FidForm = z.infer<typeof fidForm>;
 
 export const insuranceForm = z.object({
   customerName: z.string().trim().min(1, 'Required').max(120),
