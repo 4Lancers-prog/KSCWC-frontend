@@ -46,6 +46,8 @@ export function CustomerDetailPage() {
 
       <dl className="mt-6 grid gap-4 rounded-xl2 border border-line bg-white p-5 sm:grid-cols-2">
         <Field label="ಮೊಬೈಲ್ · Mobile" value={customer.mobileNormalized} />
+        <Field label="ಆಧಾರ್ · Aadhaar" value={customer.aadhaarMasked ?? '—'} />
+        <Field label="ಪ್ಯಾನ್ · PAN" value={customer.panMasked ?? '—'} />
         <Field label="ಸೇವೆ · Service" value={customer.service?.nameKn ?? '—'} />
         <Field label="ಉಲ್ಲೇಖ · Reference" value={customer.referenceCode ?? '—'} />
         <Field label="ಶುಲ್ಕ · Fee" value={customer.feePaise != null ? formatPaise(customer.feePaise) : '—'} />

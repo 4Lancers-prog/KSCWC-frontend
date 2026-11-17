@@ -3,6 +3,7 @@
 // show up without reloading.
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { PageSuspense } from '@/components/PageSuspense';
+import { ServerVersionBanner } from '@/components/ServerVersionBanner';
 import { Emblem } from '@/components/Emblem';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,6 +43,17 @@ export function AdminLayout() {
         { to: '/admin/categories', kn: 'ವರ್ಗಗಳು', en: 'Categories' },
       ],
     },
+    {
+      title: 'ವೆಬ್‌ಸೈಟ್ · Website',
+      items: [
+        { to: '/', kn: 'ಮುಖಪುಟ', en: 'Website home', end: true },
+        { to: '/services', kn: 'ಸೇವೆಗಳು', en: 'Services information' },
+        { to: '/announcements', kn: 'ಪ್ರಕಟಣೆಗಳು', en: 'Announcements & videos' },
+        { to: '/committees', kn: 'ಸಮಿತಿಗಳು', en: 'Leadership & committees' },
+        { to: '/about', kn: 'ನಮ್ಮ ಬಗ್ಗೆ', en: 'About the council' },
+        { to: '/contact', kn: 'ಸಂಪರ್ಕ', en: 'Contact & forms' },
+      ],
+    },
   ];
 
   return (
@@ -57,6 +69,7 @@ export function AdminLayout() {
         </div>
         <div className="h-[3px] w-full bg-gold-500" />
       </header>
+      <ServerVersionBanner />
       <div className="container-content grid grid-cols-[minmax(0,1fr)] gap-6 py-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
           <SideNav groups={groups} label="Admin" />

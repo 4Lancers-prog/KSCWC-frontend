@@ -41,6 +41,9 @@ export interface AdminUser {
   rejectedReason?: string | null;
   approvedAt?: string | null;
   createdAt: string;
+  aadhaarMasked?: string | null;
+  panMasked?: string | null;
+  logoUrl?: string | null;
 }
 export function useAdminUsers(params: { status?: string; search?: string; page: number }) {
   const qs = new URLSearchParams({ page: String(params.page), limit: '20' });

@@ -29,6 +29,17 @@ const GROUPS: SideNavGroup[] = [
       { to: '/app/tools/passport-photo', kn: 'ಪಾಸ್‌ಪೋರ್ಟ್ ಫೋಟೋ', en: 'Passport photo' },
     ],
   },
+  {
+    title: 'ವೆಬ್‌ಸೈಟ್ · Website',
+    items: [
+      { to: '/', kn: 'ಮುಖಪುಟ', en: 'Website home', end: true },
+      { to: '/services', kn: 'ಸೇವೆಗಳು', en: 'Services information' },
+      { to: '/announcements', kn: 'ಪ್ರಕಟಣೆಗಳು', en: 'Announcements & videos' },
+      { to: '/committees', kn: 'ಸಮಿತಿಗಳು', en: 'Leadership & committees' },
+      { to: '/about', kn: 'ನಮ್ಮ ಬಗ್ಗೆ', en: 'About the council' },
+      { to: '/contact', kn: 'ಸಂಪರ್ಕ', en: 'Contact & forms' },
+    ],
+  },
 ];
 
 export function DashboardLayout() {
@@ -42,7 +53,8 @@ export function DashboardLayout() {
         <div className="container-content flex items-center gap-3 py-3">
           <Emblem size={36} />
           <span className="hidden font-display text-base font-semibold sm:inline">{L.org_short}</span>
-          <NavLink to="/app/profile" className="ml-auto max-w-[8rem] truncate text-sm text-navy-100 underline decoration-navy-400 underline-offset-4 hover:text-white sm:max-w-none" title="ನನ್ನ ಖಾತೆ · My account">{user?.fullName}</NavLink>
+          {user?.logoUrl && <img src={user.logoUrl} alt="" className="ml-auto h-9 w-9 shrink-0 rounded-lg border border-white/30 bg-white object-contain" />}
+          <NavLink to="/app/profile" className={`${user?.logoUrl ? '' : 'ml-auto '}max-w-[8rem] truncate text-sm text-navy-100 underline decoration-navy-400 underline-offset-4 hover:text-white sm:max-w-none`} title="ನನ್ನ ಖಾತೆ · My account">{user?.fullName}</NavLink>
           {user && user.role !== 'USER' && (
             <NavLink to="/admin" className="rounded-lg bg-gold-500 px-3 py-1.5 text-sm font-semibold text-navy-950 hover:bg-gold-400">
               ನಿರ್ವಾಹಕ

@@ -11,13 +11,28 @@ function announceSessionEnded(message: string) {
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(SESSION_ENDED_EVENT, { detail: message }));
 }
 
+/** Plain-language messages for errors whose raw text would confuse people. */
+function friendlyMessage(status: number, body: ApiError): string {
+  const raw = body.message || '';
+  if (body.code === 'ROUTE_NOT_FOUND' || (status === 404 && raw === 'Route not found')) {
+    return 'ಸರ್ವರ್ ಇನ್ನೂ ಹಳೆಯ ಆವೃತ್ತಿಯಲ್ಲಿದೆ · The server is running an older version, so this feature isn’t available yet. Admin: check the latest Railway deploy.';
+  }
+  if (status === 429) return 'ಹಲವು ಪ್ರಯತ್ನಗಳು · Too many attempts. Please wait a few minutes and try again.';
+  if (status === 413) return raw || 'ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದು · The file is too large.';
+  if (status >= 500 && (!raw || raw === 'Something went wrong')) {
+    return `ಸರ್ವರ್ ದೋಷ · Something went wrong on the server. Please try again${body.requestId ? ` (reference: ${body.requestId})` : ''}.`;
+  }
+  if (status === 0 || raw === 'Failed to fetch') return 'ಸಂಪರ್ಕ ಇಲ್ಲ · Could not reach the server. Check your internet connection and try again.';
+  return raw || 'Request failed';
+}
+
 export class ApiClientError extends Error {
   code: string;
   status: number;
   fieldErrors?: ApiError['fieldErrors'];
   requestId?: string;
   constructor(status: number, body: ApiError) {
-    super(body.message || 'Request failed');
+    super(friendlyMessage(status, body));
     this.name = 'ApiClientError';
     this.status = status;
     this.code = body.code ?? 'ERROR';

@@ -31,5 +31,7 @@ export interface SessionUser {
   accountStatus: AccountStatus;
   centreName: string | null;
   cscId: string | null;
-  mfaEnabled: boolean;
+  mfaEnabled: boolean;  aadhaarMasked?: string | null;
+  panMasked?: string | null;
+  logoUrl?: string | null;
 }

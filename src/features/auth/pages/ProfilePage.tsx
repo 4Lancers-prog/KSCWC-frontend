@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Button, FormField, PasswordInput, PasswordMatch, PasswordRules } from '@/components/ui';
+import { Alert, Button, buttonClass, FormField, PasswordInput, PasswordMatch, PasswordRules } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { api, ApiClientError } from '@/lib/api-client';
+import { api, apiForm, ApiClientError } from '@/lib/api-client';
+import { shrinkImage } from '@/lib/image-shrink';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
 
 const form = z
@@ -21,6 +23,8 @@ const ROLE: Record<string, string> = { USER: 'ಸಂಚಾಲಕ · Operator', A
 
 export function ProfilePage() {
   const { user } = useAuth();
+  const qc = useQueryClient();
+  const refreshMe = () => qc.invalidateQueries({ queryKey: ['me'] });
   const [err, setErr] = useState<string | null>(null);
   const { register, handleSubmit, watch, reset, setError, formState: { errors, isSubmitting } } = useForm<Form>({
     resolver: zodResolver(form), mode: 'onTouched',
@@ -53,6 +57,8 @@ export function ProfilePage() {
           ['ಇಮೇಲ್ · Email', user?.email],
           ['ಕೇಂದ್ರ · Centre', user?.centreName],
           ['CSC ID', user?.cscId],
+          ['ಆಧಾರ್ · Aadhaar', user?.aadhaarMasked],
+          ['ಪ್ಯಾನ್ · PAN', user?.panMasked],
           ['ಪಾತ್ರ · Role', user ? ROLE[user.role] ?? user.role : ''],
         ].map(([k, v]) => (
           <div key={k}>
@@ -61,7 +67,31 @@ export function ProfilePage() {
           </div>
         ))}
       </dl>
-      <p className="mt-2 text-xs text-slate2">ವಿವರಗಳನ್ನು ಬದಲಾಯಿಸಲು ಪರಿಷತ್ ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ · To change these details, contact the council office.</p>
+      <p className="mt-2 text-xs text-slate2">ವಿವರಗಳನ್ನು ಬದಲಾಯಿಸಲು ಪರಿಷತ್ ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ · To change these details, contact the council office. Aadhaar and PAN are stored encrypted and only ever shown masked.</p>
+
+      {user?.role === 'USER' && (
+        <section className="mt-8 rounded-xl2 border border-line bg-white p-5">
+          <h2 className="font-display text-lg text-navy-900">ಕೇಂದ್ರದ ಲೋಗೋ · Centre logo</h2>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            {user.logoUrl
+              ? <img src={user.logoUrl} alt="" className="h-20 w-20 rounded-xl border border-line bg-white object-contain" />
+              : <span className="grid h-20 w-20 place-items-center rounded-xl border border-dashed border-line text-xs text-slate2">ಇಲ್ಲ · none</span>}
+            <label className={buttonClass('secondary', 'sm')}>
+              {user.logoUrl ? 'ಬದಲಿಸಿ · Change' : 'ಅಪ್‌ಲೋಡ್ · Upload'}
+              <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={async (e) => {
+                const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+                try {
+                  const fd = new FormData(); fd.append('logo', await shrinkImage(f, 512));
+                  await apiForm('/me/logo', fd); await refreshMe(); toast('ಲೋಗೋ ಉಳಿಸಲಾಗಿದೆ · Logo saved', 'success');
+                } catch (e2) { toast(e2 instanceof Error ? e2.message : 'Upload failed', 'error'); }
+              }} />
+            </label>
+            {user.logoUrl && (
+              <Button size="sm" variant="ghost" onClick={async () => { await api('/me/logo', { method: 'DELETE' }); await refreshMe(); }}>ತೆಗೆದುಹಾಕಿ · Remove</Button>
+            )}
+          </div>
+        </section>
+      )}
 
       <form onSubmit={onSubmit} noValidate className="mt-8 space-y-4 rounded-xl2 border border-line bg-white p-5">
         <h2 className="font-display text-lg text-navy-900">ಪಾಸ್‌ವರ್ಡ್ ಬದಲಿಸಿ · Change password</h2>

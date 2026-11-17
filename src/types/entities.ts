@@ -22,6 +22,8 @@ export interface Customer {
   feePaise: number | null;
   status: CustomerStatus;
   notes: string | null;
+  aadhaarMasked?: string | null;
+  panMasked?: string | null;
   createdAt: string;
   updatedAt: string;
 }

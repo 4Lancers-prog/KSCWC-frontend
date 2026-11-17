@@ -1,5 +1,6 @@
 // schemas.ts — client-side Zod form schemas (mirror of backend request schemas).
 import { z } from 'zod';
+import { aadhaarField, panField, optionalAadhaarField, optionalPanField } from './identity';
 
 export const phoneField = z
   .string()
@@ -20,6 +21,8 @@ export const registerForm = z
     email: z.string().trim().email('Enter a valid email').optional().or(z.literal('')),
     centreName: z.string().trim().max(160).optional().or(z.literal('')),
     cscId: z.string().trim().max(80).optional().or(z.literal('')),
+    aadhaar: aadhaarField,
+    pan: panField,
     password: z.string().min(12, 'Use at least 12 characters'),
     confirm: z.string().min(1, 'ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತೆ ನಮೂದಿಸಿ · Please confirm your password'),
   })
@@ -41,6 +44,8 @@ export const customerForm = z.object({
     .or(z.literal(''))
     .refine((v) => !v || /^\d+(\.\d{1,2})?$/.test(v), 'Enter a valid amount'),
   notes: z.string().trim().max(2000).optional().or(z.literal('')),
+  aadhaar: optionalAadhaarField,
+  pan: optionalPanField,
 });
 export type CustomerForm = z.infer<typeof customerForm>;
 

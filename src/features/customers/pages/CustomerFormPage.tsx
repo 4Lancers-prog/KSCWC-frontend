@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { aadhaarDigits, aadhaarProblem, formatAadhaar, formatPan, panProblem } from '@/lib/identity';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Select, FormField, Alert, Spinner } from '@/components/ui';
 import { customerForm, type CustomerForm } from '@/lib/schemas';
@@ -22,8 +23,15 @@ export function CustomerFormPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [dupPrompt, setDupPrompt] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<CustomerForm>({ resolver: zodResolver(customerForm) });
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
+    useForm<CustomerForm>({ resolver: zodResolver(customerForm), mode: 'onTouched' });
+  const aadhaarReg = register('aadhaar');
+  const panReg = register('pan');
+  const typedAadhaar = watch('aadhaar') ?? '';
+  const typedPan = watch('pan') ?? '';
+  // editing: the saved number is only ever shown masked; type a new one to replace it
+  const [clearAadhaar, setClearAadhaar] = useState(false);
+  const [clearPan, setClearPan] = useState(false);
 
   // hydrate the form once when editing and data arrives
   const c = existing.data?.customer;
@@ -50,6 +58,8 @@ export function CustomerFormPage() {
       referenceCode: v.referenceCode || undefined,
       feePaise: v.feeRupees ? rupeesToPaise(Number(v.feeRupees)) : undefined,
       notes: v.notes || undefined,
+      ...(v.aadhaar?.trim() ? { aadhaar: aadhaarDigits(v.aadhaar) } : clearAadhaar ? { clearAadhaar: true } : {}),
+      ...(v.pan?.trim() ? { pan: formatPan(v.pan) } : clearPan ? { clearPan: true } : {}),
     };
     try {
       if (isEdit) {
@@ -112,6 +122,35 @@ export function CustomerFormPage() {
             <Input id="feeRupees" inputMode="decimal" placeholder="0.00" {...register('feeRupees')} />
           </FormField>
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField id="aadhaar" label="ಆಧಾರ್ ಸಂಖ್ಯೆ" error={errors.aadhaar?.message}
+            helper={isEdit && c?.aadhaarMasked && !clearAadhaar ? `Saved: ${c.aadhaarMasked} — type a new number to replace it` : 'Aadhaar (optional) — stored securely, shown masked'}
+            hint={typedAadhaar && !aadhaarProblem(typedAadhaar) ? <p className="text-xs text-emerald-700">✓ ಸರಿಯಾಗಿದೆ · Looks valid</p> : undefined}>
+            <Input id="aadhaar" inputMode="numeric" autoComplete="off" placeholder="1234 5678 9012" maxLength={14}
+              invalid={!!errors.aadhaar} {...aadhaarReg}
+              onChange={(e) => { e.target.value = formatAadhaar(e.target.value); void aadhaarReg.onChange(e); }} />
+          </FormField>
+          <FormField id="pan" label="ಪ್ಯಾನ್ ಸಂಖ್ಯೆ" error={errors.pan?.message}
+            helper={isEdit && c?.panMasked && !clearPan ? `Saved: ${c.panMasked} — type a new PAN to replace it` : 'PAN (optional), e.g. ABCDE1234F'}
+            hint={typedPan && !panProblem(typedPan) ? <p className="text-xs text-emerald-700">✓ ಸರಿಯಾಗಿದೆ · Looks valid</p> : undefined}>
+            <Input id="pan" autoComplete="off" autoCapitalize="characters" placeholder="ABCDE1234F" maxLength={10}
+              invalid={!!errors.pan} {...panReg}
+              onChange={(e) => { e.target.value = formatPan(e.target.value); void panReg.onChange(e); }} />
+          </FormField>
+        </div>
+        {isEdit && (c?.aadhaarMasked || c?.panMasked) && (
+          <div className="flex flex-wrap gap-4 text-sm text-slate2">
+            {c?.aadhaarMasked && (
+              <label className="flex min-h-10 items-center gap-2"><input type="checkbox" className="h-5 w-5 accent-navy-600" checked={clearAadhaar} onChange={(e) => setClearAadhaar(e.target.checked)} />
+                ಉಳಿಸಿದ ಆಧಾರ್ ತೆಗೆದುಹಾಕಿ · Remove saved Aadhaar</label>
+            )}
+            {c?.panMasked && (
+              <label className="flex min-h-10 items-center gap-2"><input type="checkbox" className="h-5 w-5 accent-navy-600" checked={clearPan} onChange={(e) => setClearPan(e.target.checked)} />
+                ಉಳಿಸಿದ ಪ್ಯಾನ್ ತೆಗೆದುಹಾಕಿ · Remove saved PAN</label>
+            )}
+          </div>
+        )}
 
         <FormField id="notes" label="ಟಿಪ್ಪಣಿ" helper="Notes (optional)" error={errors.notes?.message}>
           <textarea

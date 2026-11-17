@@ -85,8 +85,15 @@ export function UsersApprovals() {
                       {u.emailNormalized && <div className="text-xs">{u.emailNormalized}</div>}
                     </Td>
                     <Td>
-                      {u.centreName ?? '—'}
-                      {u.cscId && <div className="text-xs">CSC ID: {u.cscId}</div>}
+                      <span className="flex items-start gap-2">
+                        {u.logoUrl && <img src={u.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-white object-contain" />}
+                        <span>
+                          {u.centreName ?? '—'}
+                          {u.cscId && <span className="block text-xs">CSC ID: {u.cscId}</span>}
+                          {u.aadhaarMasked && <span className="block text-xs">ಆಧಾರ್: {u.aadhaarMasked}</span>}
+                          {u.panMasked && <span className="block text-xs">PAN: {u.panMasked}</span>}
+                        </span>
+                      </span>
                     </Td>
                     <Td className="whitespace-nowrap">{formatDate(u.createdAt)}</Td>
                     <Td>
