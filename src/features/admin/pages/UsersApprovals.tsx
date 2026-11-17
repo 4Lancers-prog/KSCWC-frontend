@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/format';
 import { useAdminUsers, useUserAction, type AdminUser } from '../admin.api';
 import { ReasonDialog } from '../components/ReasonDialog';
 import { DevicesDialog } from '../components/DevicesDialog';
+import { ResetLinkDialog } from '../components/ResetLinkDialog';
 
 const statusTone = { PENDING_APPROVAL: 'warning', ACTIVE: 'success', REJECTED: 'danger', SUSPENDED: 'danger' } as const;
 const statusLabel = {
@@ -26,6 +27,7 @@ export function UsersApprovals() {
   const action = useUserAction();
   const [dialog, setDialog] = useState<{ user: AdminUser; act: 'reject' | 'suspend' } | null>(null);
   const [devicesFor, setDevicesFor] = useState<AdminUser | null>(null);
+  const [resetFor, setResetFor] = useState<AdminUser | null>(null);
 
   const run = (u: AdminUser, act: Act) => {
     if (act === 'reject' || act === 'suspend') return setDialog({ user: u, act });
@@ -109,6 +111,9 @@ export function UsersApprovals() {
                         {u.role === 'USER' && u.accountStatus !== 'PENDING_APPROVAL' && u.accountStatus !== 'REJECTED' && (
                           <Button size="sm" variant="secondary" onClick={() => setDevicesFor(u)}>ಸಾಧನಗಳು · Devices</Button>
                         )}
+                        {u.accountStatus === 'ACTIVE' && (
+                          <Button size="sm" variant="secondary" onClick={() => setResetFor(u)}>ಪಾಸ್‌ವರ್ಡ್ ಲಿಂಕ್ · Reset link</Button>
+                        )}
                       </div>
                     </Td>
                   </tr>
@@ -121,6 +126,7 @@ export function UsersApprovals() {
       </div>
 
       <DevicesDialog user={devicesFor} onClose={() => setDevicesFor(null)} />
+      <ResetLinkDialog user={resetFor} onClose={() => setResetFor(null)} />
 
       <ReasonDialog
         open={!!dialog}

@@ -76,7 +76,6 @@ export const grievanceFormSchema = z.object({
   details: z.string().trim().min(1, 'Required').max(4000),
 });
 
-export const forgotForm = z.object({ phone: phoneField });
 export const resetForm = z
   .object({
     token: z.string().min(10),

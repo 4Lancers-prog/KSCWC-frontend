@@ -10,8 +10,6 @@ import {
 } from '../wallet.api';
 import { rupeesToPaise } from '@/lib/money';
 import { formatPaise, formatDate } from '@/lib/format';
-import { useAuth } from '@/hooks/useAuth';
-import { ApiClientError } from '@/lib/api-client';
 import type { WalletTxn } from '@/types/entities';
 
 const TX_LABEL: Record<WalletTxn['type'], string> = {
@@ -30,7 +28,6 @@ const STATUS: Record<ManualTopup['status'], { kn: string; cls: string }> = {
 };
 
 export function WalletPage() {
-  const { user } = useAuth();
   const wallet = useWallet();
   const [page, setPage] = useState(1);
   const txns = useTransactions(page);
@@ -100,7 +97,7 @@ export function WalletPage() {
 // ── UPI / QR flow: pay to the council QR, then declare the UTR for admin verification ──
 function UpiTopup() {
   const qr = usePaymentQr();
-  const qrImage = usePaymentQrImage(qr.isSuccess);
+  const qrImage = usePaymentQrImage(!!qr.data);
   const submit = useSubmitManualTopup();
   const [rupees, setRupees] = useState('');
   const [utr, setUtr] = useState('');
@@ -108,7 +105,7 @@ function UpiTopup() {
   const [err, setErr] = useState<string | null>(null);
 
   if (qr.isLoading) return <div className="py-6 text-center"><Spinner className="mx-auto h-6 w-6 text-navy-500" /></div>;
-  if (qr.isError) {
+  if (qr.isError || !qr.data) {
     return <Alert tone="info">UPI ಪಾವತಿ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ · UPI payment isn’t set up yet. The council will publish the payment QR soon — please check back later.</Alert>;
   }
 
@@ -126,7 +123,7 @@ function UpiTopup() {
       await submit.mutateAsync(form);
       setRupees(''); setUtr(''); setFile(null);
     } catch {
-      /* global error toast already fired */
+      // the shared error toast has already been shown
     }
   };
 

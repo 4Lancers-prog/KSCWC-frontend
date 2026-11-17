@@ -137,7 +137,7 @@ export function useServiceMutations() {
 }
 
 // ── Documents (multipart upload) ──
-export interface AdminDocument { id: string; title: string; category: string | null; mimeType: string; sizeBytes: number; visibility: string; createdAt: string }
+export interface AdminDocument { id: string; title: string; description?: string | null; kind?: 'APPLICATION' | 'DRAFT'; imageUrl?: string | null; categoryId?: string | null; mimeType: string; fileExt?: string; sizeBytes: number; visibility: 'PUBLIC' | 'PRIVATE'; createdAt: string }
 export function useAdminDocuments() {
   return useQuery({ queryKey: ['admin-docs'], queryFn: () => api<{ items: AdminDocument[] }>('/admin/documents').then((r) => r.items) });
 }
@@ -153,12 +153,32 @@ export function useDocumentMutations() {
           headers: { 'x-csrf-token': await getCsrfToken() },
           body: form,
         });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? 'Upload failed');
+        if (!res.ok) {
+          const b = await res.json().catch(() => ({}));
+          const f = (b.fieldErrors ?? []).map((x: { message: string }) => x.message).join(' · ');
+          throw new Error(f ? `${b.message}: ${f}` : (b.message ?? 'Upload failed'));
+        }
         return res.json();
       },
       onSuccess: done('ದಾಖಲೆ ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ'),
     }),
     archive: useMutation({ mutationFn: (id: string) => api(`/admin/documents/${id}/archive`, { method: 'POST' }), onSuccess: done('ದಾಖಲೆ ಆರ್ಕೈವ್ ಆಗಿದೆ') }),
+    setImage: useMutation({
+      mutationFn: ({ id, file }: { id: string; file: File }) => {
+        const fd = new FormData();
+        fd.append('image', file);
+        return apiForm<{ document: AdminDocument }>(`/admin/documents/${id}/image`, fd);
+      },
+      onSuccess: done('ಚಿತ್ರ ಉಳಿಸಲಾಗಿದೆ · Image saved'),
+    }),
+    removeImage: useMutation({
+      mutationFn: (id: string) => api<{ document: AdminDocument }>(`/admin/documents/${id}/image`, { method: 'DELETE' }),
+      onSuccess: done('ಚಿತ್ರ ತೆಗೆದುಹಾಕಲಾಗಿದೆ · Image removed'),
+    }),
+    update: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/documents/${id}`, { method: 'PATCH', body }),
+      onSuccess: done('ಉಳಿಸಲಾಗಿದೆ · Saved'),
+    }),
   };
 }
 
@@ -257,7 +277,11 @@ export function useManualTopupReview() {
 export interface PaymentQrConfig { upiId: string; payeeName: string; note: string | null; imageUrl: string }
 
 export function usePaymentQrConfig() {
-  return useQuery({ queryKey: ['payment-qr'], queryFn: () => api<PaymentQrConfig>('/payment-qr'), retry: false });
+  return useQuery({
+    queryKey: ['payment-qr'],
+    queryFn: () => api<(PaymentQrConfig & { configured: true }) | { configured: false }>('/payment-qr').then((r) => (r.configured ? r : null)),
+    retry: false,
+  });
 }
 
 export function useSetPaymentQr() {
@@ -357,6 +381,26 @@ export function useDeviceActions(userId: string | null) {
       mutationFn: () => api(`/admin/users/${userId}/sign-out`, { method: 'POST' }),
       onSuccess: () => { refresh(); toast('ಸೈನ್ ಔಟ್ ಮಾಡಲಾಗಿದೆ · Signed out', 'success'); },
       onError: (e: Error) => toast(e.message, 'error'),
+    }),
+  };
+}
+
+// ── Categories (links + templates) ──
+export function useCategoryMutations(scope: 'LINKS' | 'DOCUMENTS' | 'DRAFTS') {
+  const qc = useQueryClient();
+  const done = (msg: string) => () => { qc.invalidateQueries({ queryKey: ['categories', scope] }); toast(msg, 'success'); };
+  return {
+    create: useMutation({
+      mutationFn: (b: { nameKn: string; nameEn?: string; parentId?: string | null }) => api('/admin/categories', { method: 'POST', body: { ...b, scope } }),
+      onSuccess: done('ವರ್ಗ ಸೇರಿಸಲಾಗಿದೆ · Category added'),
+    }),
+    update: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => api(`/admin/categories/${id}`, { method: 'PATCH', body }),
+      onSuccess: done('ಉಳಿಸಲಾಗಿದೆ · Saved'),
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => api(`/admin/categories/${id}`, { method: 'DELETE' }),
+      onSuccess: done('ಅಳಿಸಲಾಗಿದೆ · Deleted'),
     }),
   };
 }

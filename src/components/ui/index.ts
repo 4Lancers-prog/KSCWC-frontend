@@ -12,3 +12,4 @@ export { Toaster } from './Toaster';
 export { PasswordInput, PasswordRules, PasswordMatch } from './PasswordInput';
 export { ActionTile } from './ActionTile';
 export { Icons } from './icons';
+export { CategorySelect } from './CategorySelect';

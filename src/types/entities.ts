@@ -89,6 +89,7 @@ export interface GovLink {
   imageUrl?: string | null;
   description: string | null;
   category?: 'STATE' | 'CENTRAL' | 'OTHER';
+  categoryId?: string | null;
   featured?: boolean;
   sortOrder?: number;
   isActive?: boolean;
@@ -97,11 +98,26 @@ export interface GovLink {
 export interface PublicDocument {
   id: string;
   title: string;
-  category: string | null;
+  description?: string | null;
+  kind?: DocumentKind;
+  categoryId?: string | null;
+  imageUrl?: string | null;
   mimeType: string;
+  fileExt?: string;
   sizeBytes: number;
   createdAt: string;
   visibility?: 'PUBLIC' | 'PRIVATE';
+}
+
+export type CategoryScope = 'LINKS' | 'DOCUMENTS' | 'DRAFTS';
+export type DocumentKind = 'APPLICATION' | 'DRAFT';
+export interface Category {
+  id: string;
+  scope: CategoryScope;
+  nameKn: string;
+  nameEn: string | null;
+  parentId: string | null;
+  sortOrder: number;
 }
 
 export interface CustomerReport {

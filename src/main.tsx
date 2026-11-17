@@ -1,4 +1,7 @@
 // main.tsx — React entry. Loads self-hosted fonts + styles and mounts the providers.
+import { installDomGuard } from './lib/dom-guard';
+installDomGuard(); // before React touches the page
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';

@@ -1,22 +1,31 @@
 // GovernmentLinksAdmin.tsx — add/deactivate government service links (https only).
 import { useState } from 'react';
-import { Button, Input, Table, Th, Td, Spinner, Alert, FormField, Modal, Select, buttonClass } from '@/components/ui';
+import { Button, Input, Table, Th, Td, Spinner, Alert, FormField, Modal, buttonClass, CategorySelect } from '@/components/ui';
+import { Link } from 'react-router-dom';
 import { useAdminLinks, useLinkMutations } from '../admin.api';
+import { useCategories } from '@/features/public-content/public-content.api';
+import { categoryPath } from '@/lib/categories';
+import { ApiClientError } from '@/lib/api-client';
+import { shrinkImage, normalizeHttpsUrl } from '@/lib/image-shrink';
 import type { GovLink } from '@/types/entities';
 
-type GovCategory = 'STATE' | 'CENTRAL' | 'OTHER';
-const CATEGORIES: { v: GovCategory; label: string }[] = [
-  { v: 'STATE', label: 'ಕರ್ನಾಟಕ · Karnataka' },
-  { v: 'CENTRAL', label: 'ಭಾರತ ಸರ್ಕಾರ · India' },
-  { v: 'OTHER', label: 'ಇತರೆ · Other' },
-];
+
+/** Readable message incl. which field is wrong (server sends fieldErrors). */
+function errorText(e: unknown): string {
+  if (e instanceof ApiClientError) {
+    const f = e.fieldErrors?.map((x) => x.message).filter(Boolean).join(' · ');
+    return f ? `${e.message}: ${f}` : e.message;
+  }
+  return e instanceof Error ? e.message : 'Could not save';
+}
 
 export function GovernmentLinksAdmin() {
   const { data, isLoading } = useAdminLinks();
   const { create, update, deactivate, reactivate, setImage, removeImage } = useLinkMutations();
   const [newImage, setNewImage] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0); // resets the file input after adding
-  const EMPTY = { title: '', url: '', description: '', category: 'STATE' as GovCategory, featured: true };
+  const cats = useCategories('LINKS');
+  const EMPTY = { title: '', url: '', description: '', categoryId: '', featured: true };
   const [form, setForm] = useState(EMPTY);
   const [err, setErr] = useState<string | null>(null);
   const [edit, setEdit] = useState<GovLink | null>(null);
@@ -31,16 +40,16 @@ export function GovernmentLinksAdmin() {
         id: edit!.id,
         body: {
           title: String(fd.get('title')),
-          url: String(fd.get('url')),
+          url: normalizeHttpsUrl(String(fd.get('url'))),
           description: String(fd.get('description') || ''),
           sortOrder: Number(fd.get('sortOrder') || 0),
-          category: String(fd.get('category') || 'OTHER') as GovCategory,
+          categoryId: String(fd.get('categoryId') || '') || null,
           featured: fd.get('featured') === 'on',
         },
       });
       setEdit(null);
     } catch (e2) {
-      setEditErr(e2 instanceof Error ? e2.message : 'Could not save');
+      setEditErr(errorText(e2));
     }
   };
 
@@ -49,35 +58,44 @@ export function GovernmentLinksAdmin() {
     setErr(null);
     try {
       const { link } = await create.mutateAsync({
-        title: form.title, url: form.url, description: form.description || undefined,
-        category: form.category, featured: form.featured,
+        title: form.title, url: normalizeHttpsUrl(form.url), description: form.description || undefined,
+        categoryId: form.categoryId || null, featured: form.featured,
       });
-      if (newImage) await setImage.mutateAsync({ id: link.id, file: newImage });
+      // The link is saved now — reset the form so a retry can't create a duplicate.
+      const image = newImage;
       setForm(EMPTY);
       setNewImage(null);
       setFileKey((k) => k + 1);
-    } catch (e2) { setErr(e2 instanceof Error ? e2.message : 'Could not save'); }
+      if (image) {
+        try {
+          await setImage.mutateAsync({ id: link.id, file: await shrinkImage(image) });
+        } catch (imgErr) {
+          setErr(`ಕೊಂಡಿ ಉಳಿಸಲಾಗಿದೆ, ಆದರೆ ಚಿತ್ರ ಅಪ್‌ಲೋಡ್ ಆಗಲಿಲ್ಲ · Link saved, but the image did not upload (${errorText(imgErr)}). Use “Edit” on the link to add it.`);
+        }
+      }
+    } catch (e2) { setErr(errorText(e2)); }
   };
 
   return (
     <div>
       <div className="gold-rule mb-3" />
-      <h1 className="font-display text-2xl text-navy-900">ಸರ್ಕಾರಿ ಕೊಂಡಿಗಳು</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="font-display text-2xl text-navy-900">ಸರ್ಕಾರಿ ಕೊಂಡಿಗಳು</h1>
+        <Link to="/admin/categories?tab=LINKS" className="link text-sm text-navy-700">ವರ್ಗಗಳನ್ನು ನಿರ್ವಹಿಸಿ · Manage categories</Link>
+      </div>
       <form onSubmit={submit} className="mt-6 grid gap-3 rounded-xl2 border border-line bg-white p-5 sm:grid-cols-2">
         {err && <div className="sm:col-span-2"><Alert tone="error">{err}</Alert></div>}
         <FormField id="title" label="ಶೀರ್ಷಿಕೆ" helper="Title" required>
           <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         </FormField>
-        <FormField id="url" label="URL" helper="https:// only" required>
-          <Input id="url" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} required />
+        <FormField id="url" label="URL" helper="https:// is added automatically" required>
+          <Input id="url" inputMode="url" placeholder="sevasindhu.karnataka.gov.in" onBlur={() => setForm((f) => ({ ...f, url: normalizeHttpsUrl(f.url) }))} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} required />
         </FormField>
         <FormField id="desc" label="ವಿವರ" helper="Description">
           <Input id="desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </FormField>
-        <FormField id="cat" label="ವರ್ಗ" helper="Category">
-          <Select id="cat" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as GovCategory })}>
-            {CATEGORIES.map((c) => <option key={c.v} value={c.v}>{c.label}</option>)}
-          </Select>
+        <FormField id="cat" label="ವರ್ಗ / ಉಪ-ವರ್ಗ" helper="Category or sub-category">
+          <CategorySelect id="cat" categories={cats.data} value={form.categoryId} onChange={(v) => setForm({ ...form, categoryId: v })} />
         </FormField>
         <label className="flex min-h-11 items-center gap-3 self-end rounded-lg border border-line bg-mist px-3 text-sm text-navy-900">
           <input type="checkbox" className="h-5 w-5 accent-navy-600" checked={form.featured}
@@ -114,7 +132,7 @@ export function GovernmentLinksAdmin() {
                       ? <a href={l.url} target="_blank" rel="noopener noreferrer" className="text-navy-600 link">{l.url}</a>
                       : <button type="button" onClick={() => setEdit(l)} className="font-semibold text-danger link">⚠ ವಿಳಾಸ ಇಲ್ಲ · Address missing — edit to fix</button>}
                   </Td>
-                  <Td className="whitespace-nowrap">{CATEGORIES.find((c) => c.v === (l.category ?? 'OTHER'))?.label}</Td>
+                  <Td className="whitespace-nowrap">{categoryPath(cats.data, l.categoryId)}</Td>
                   <Td>{l.featured ? '★ ಹೌದು' : '—'}</Td>
                   <Td>{l.isActive ? 'ಸಕ್ರಿಯ' : 'ನಿಷ್ಕ್ರಿಯ'}</Td>
                   <Td>
@@ -139,8 +157,9 @@ export function GovernmentLinksAdmin() {
             <FormField id="el-title" label="ಶೀರ್ಷಿಕೆ" helper="Title" required>
               <Input id="el-title" name="title" defaultValue={edit.title} required />
             </FormField>
-            <FormField id="el-url" label="URL" helper="https:// only" required>
-              <Input id="el-url" name="url" defaultValue={edit.url ?? ''} placeholder="https://…gov.in" required />
+            <FormField id="el-url" label="URL" helper="https:// is added automatically" required>
+              <Input id="el-url" name="url" inputMode="url" defaultValue={edit.url ?? ''} placeholder="sevasindhu.karnataka.gov.in" required
+                onBlur={(e) => { e.currentTarget.value = normalizeHttpsUrl(e.currentTarget.value); }} />
             </FormField>
             <FormField id="el-desc" label="ವಿವರ" helper="Description">
               <Input id="el-desc" name="description" defaultValue={edit.description ?? ''} />
@@ -148,10 +167,8 @@ export function GovernmentLinksAdmin() {
             <FormField id="el-sort" label="ಕ್ರಮ" helper="Sort order">
               <Input id="el-sort" name="sortOrder" type="number" defaultValue={String(edit.sortOrder ?? 0)} />
             </FormField>
-            <FormField id="el-cat" label="ವರ್ಗ" helper="Category">
-              <Select id="el-cat" name="category" defaultValue={edit.category ?? 'OTHER'}>
-                {CATEGORIES.map((c) => <option key={c.v} value={c.v}>{c.label}</option>)}
-              </Select>
+            <FormField id="el-cat" label="ವರ್ಗ / ಉಪ-ವರ್ಗ" helper="Category or sub-category">
+              <CategorySelect id="el-cat" name="categoryId" categories={cats.data} defaultValue={edit.categoryId ?? ''} />
             </FormField>
             <label className="flex min-h-11 items-center gap-3 rounded-lg border border-line bg-mist px-3 text-sm text-navy-900">
               <input type="checkbox" name="featured" className="h-5 w-5 accent-navy-600" defaultChecked={!!edit.featured} />
@@ -168,8 +185,9 @@ export function GovernmentLinksAdmin() {
                   <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
                     onChange={async (e) => {
                       const f = e.target.files?.[0]; if (!f) return;
-                      try { const r = await setImage.mutateAsync({ id: edit.id, file: f }); setEdit(r.link); }
-                      catch (e2) { setEditErr(e2 instanceof Error ? e2.message : 'Upload failed'); }
+                      try { const r = await setImage.mutateAsync({ id: edit.id, file: await shrinkImage(f) }); setEdit(r.link); setEditErr(null); }
+                      catch (e2) { setEditErr(errorText(e2)); }
+                      finally { e.target.value = ''; }
                     }} />
                 </label>
                 {edit.imageUrl && (

@@ -1,7 +1,8 @@
 // AdminLayout.tsx — admin console shell + nav (server enforces every permission).
 // Sidebar: shared blue SideNav. Nav badges are live (polled) so new sign-ups, UPI top-ups and applications from users
 // show up without reloading.
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { PageSuspense } from '@/components/PageSuspense';
 import { Emblem } from '@/components/Emblem';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,7 +38,8 @@ export function AdminLayout() {
         { to: '/admin/announcements', kn: 'ಪ್ರಕಟಣೆಗಳು', en: 'Announcements' },
         { to: '/admin/committees', kn: 'ಸಮಿತಿಗಳು', en: 'Committees' },
         { to: '/admin/links', kn: 'ಕೊಂಡಿಗಳು', en: 'Government links' },
-        { to: '/admin/documents', kn: 'ದಾಖಲೆಗಳು', en: 'Documents' },
+        { to: '/admin/documents', kn: 'ನಮೂನೆ / ಕರಡು', en: 'Application forms & drafts' },
+        { to: '/admin/categories', kn: 'ವರ್ಗಗಳು', en: 'Categories' },
       ],
     },
   ];
@@ -49,7 +51,7 @@ export function AdminLayout() {
         <div className="container-content flex items-center gap-3 py-3">
           <Emblem size={34} />
           <span className="font-display font-semibold">ನಿರ್ವಾಹಕ ಕನ್ಸೋಲ್</span>
-          <span className="ml-auto hidden text-sm text-navy-100 sm:block">{user?.fullName} · {user?.role}</span>
+          <Link to="/admin/profile" className="ml-auto hidden text-sm text-navy-100 underline decoration-navy-400 underline-offset-4 hover:text-white sm:block" title="ನನ್ನ ಖಾತೆ · My account">{user?.fullName} · {user?.role}</Link>
           <Button variant="outlineLight" size="sm" className="ml-2"
             onClick={async () => { await logout(); navigate('/admin/login', { replace: true }); }}>ನಿರ್ಗಮನ</Button>
         </div>
@@ -59,7 +61,7 @@ export function AdminLayout() {
         <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
           <SideNav groups={groups} label="Admin" />
         </aside>
-        <main className="min-w-0"><Outlet /></main>
+        <main className="min-w-0"><PageSuspense><Outlet /></PageSuspense></main>
       </div>
     </div>
   );

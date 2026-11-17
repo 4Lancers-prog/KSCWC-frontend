@@ -1,6 +1,8 @@
 // DashboardLayout.tsx — authenticated operator shell with a simple responsive sidebar.
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { PageSuspense } from '@/components/PageSuspense';
 import { SideNav, type SideNavGroup } from './SideNav';
+import { BottomNav } from './BottomNav';
 import { L, H } from '@/i18n';
 import { Emblem } from '@/components/Emblem';
 import { Button } from '@/components/ui';
@@ -12,10 +14,12 @@ const GROUPS: SideNavGroup[] = [
     items: [
       { to: '/app', kn: L.dashboard, en: 'Dashboard', end: true },
       { to: '/app/portals', kn: 'ಸರ್ಕಾರಿ ಪೋರ್ಟಲ್‌ಗಳು', en: 'Govt service portals' },
+      { to: '/app/templates', kn: 'ನಮೂನೆ / ಕರಡು', en: 'Application forms & drafts' },
       { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers' },
       { to: '/app/reports', kn: 'ವರದಿಗಳು', en: 'Reports' },
       { to: '/app/wallet', kn: 'ವಾಲೆಟ್', en: 'Wallet & top-up' },
       { to: '/app/applications', kn: 'ನನ್ನ ಅರ್ಜಿಗಳು', en: 'My applications' },
+      { to: '/app/profile', kn: 'ನನ್ನ ಖಾತೆ', en: 'My account & password' },
     ],
   },
   {
@@ -37,8 +41,8 @@ export function DashboardLayout() {
         <div className="flag-stripe" />
         <div className="container-content flex items-center gap-3 py-3">
           <Emblem size={36} />
-          <span className="font-display text-base font-semibold">{L.org_short}</span>
-          <span className="ml-auto hidden text-sm text-navy-100 sm:block">{user?.fullName}</span>
+          <span className="hidden font-display text-base font-semibold sm:inline">{L.org_short}</span>
+          <NavLink to="/app/profile" className="ml-auto max-w-[8rem] truncate text-sm text-navy-100 underline decoration-navy-400 underline-offset-4 hover:text-white sm:max-w-none" title="ನನ್ನ ಖಾತೆ · My account">{user?.fullName}</NavLink>
           {user && user.role !== 'USER' && (
             <NavLink to="/admin" className="rounded-lg bg-gold-500 px-3 py-1.5 text-sm font-semibold text-navy-950 hover:bg-gold-400">
               ನಿರ್ವಾಹಕ
@@ -64,10 +68,12 @@ export function DashboardLayout() {
           <SideNav groups={GROUPS} label="Operator" />
         </aside>
         <main className="min-w-0">
-          <Outlet />
+          <PageSuspense><Outlet /></PageSuspense>
         </main>
       </div>
-      <p className="container-content pb-8 text-xs text-slate2">{H.footer_disclaimer}</p>
+      {/* room for the bottom bar on phones */}
+      <p className="container-content pb-28 text-xs text-slate2 lg:pb-8">{H.footer_disclaimer}</p>
+      <BottomNav />
     </div>
   );
 }

@@ -13,6 +13,7 @@ const TILES: { to: string; kn: string; en: string; hint: string; icon: IconName 
   { to: '/app/customers', kn: 'ಗ್ರಾಹಕರು', en: 'Customers', hint: 'ದಾಖಲೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ', icon: 'users' },
   { to: '/app/reports', kn: 'ವರದಿಗಳು', en: 'Reports', hint: 'ಸೇವಾವಾರು ವರದಿ', icon: 'chart' },
   { to: '/app/wallet', kn: 'ವಾಲೆಟ್', en: 'Wallet & top-up', hint: 'ಬ್ಯಾಲೆನ್ಸ್ ಮತ್ತು ಟಾಪ್-ಅಪ್', icon: 'wallet' },
+  { to: '/app/templates', kn: 'ನಮೂನೆ / ಕರಡು', en: 'Application forms & drafts', hint: 'PDF / Word ಡೌನ್‌ಲೋಡ್', icon: 'file' },
   { to: '/app/applications', kn: 'ನನ್ನ ಅರ್ಜಿಗಳು', en: 'My applications', hint: 'ದೂರು / ವಿಮೆ / ತರಬೇತಿ ಸ್ಥಿತಿ', icon: 'inbox' },
   { to: '/app/tools/b2-photo', kn: 'B2 ಫೋಟೋ', en: 'B2 photo converter', hint: '2673 × 1890 px', icon: 'image' },
   { to: '/app/tools/passport-photo', kn: 'ಪಾಸ್‌ಪೋರ್ಟ್ ಫೋಟೋ', en: 'Passport photo', hint: '4×6 · 8 photos · 300 DPI', icon: 'portrait' },

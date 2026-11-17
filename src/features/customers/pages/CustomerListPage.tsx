@@ -27,16 +27,18 @@ export function CustomerListPage() {
           <h1 className="font-display text-2xl text-navy-900">ಗ್ರಾಹಕರು</h1>
           <p className="text-sm text-slate2">Customer records</p>
         </div>
-        <div className="flex gap-2">
+        {/* phones: the main action first and full width; desktop: side by side */}
+        <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-row-reverse">
+          <Link to="/app/customers/new" className={buttonClass('primary', 'md', 'w-full sm:w-auto')}>
+            + ಹೊಸ ಗ್ರಾಹಕ · New customer
+          </Link>
           <Button
             variant="secondary"
+            className="w-full whitespace-nowrap sm:w-auto"
             onClick={() => downloadFile('/reports/export.csv', `customers-${Date.now()}.csv`)}
           >
             CSV ಡೌನ್‌ಲೋಡ್
           </Button>
-          <Link to="/app/customers/new" className={buttonClass('primary')}>
-            + ಹೊಸ ಗ್ರಾಹಕ · New customer
-          </Link>
         </div>
       </div>
 

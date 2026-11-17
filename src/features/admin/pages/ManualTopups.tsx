@@ -137,7 +137,7 @@ export function ManualTopups() {
 // ── Payment QR configuration ──
 function QrConfigCard() {
   const qr = usePaymentQrConfig();
-  const qrImage = usePaymentQrImage(qr.isSuccess);
+  const qrImage = usePaymentQrImage(!!qr.data);
   const save = useSetPaymentQr();
   const [upiId, setUpiId] = useState('');
   const [payeeName, setPayeeName] = useState('');

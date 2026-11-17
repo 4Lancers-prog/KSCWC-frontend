@@ -3,14 +3,10 @@
 // public links page. Links come from the admin-managed list (https only).
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { groupByCategory } from '@/lib/categories';
+import { useCategories } from '../public-content.api';
 import { Icons, buttonClass } from '@/components/ui';
 import type { GovLink } from '@/types/entities';
-
-const GROUPS: { key: NonNullable<GovLink['category']>; kn: string; en: string }[] = [
-  { key: 'STATE', kn: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರ', en: 'Government of Karnataka' },
-  { key: 'CENTRAL', kn: 'ಭಾರತ ಸರ್ಕಾರ', en: 'Government of India' },
-  { key: 'OTHER', kn: 'ಇತರೆ', en: 'Other' },
-];
 
 function hostOf(url: string) {
   try { return new URL(url).host.replace(/^www\./, ''); } catch { return url; }
@@ -75,6 +71,13 @@ export function PortalGroups({ links: all, wide }: { links: GovLink[]; wide?: bo
   // Logged in: never offer "log in" again — a link without an address just isn't shown.
   const links = isAuthenticated ? all.filter((l) => l.url) : all;
   const locked = !isAuthenticated && links.some((l) => !l.url);
+  const cats = useCategories('LINKS');
+  const { groups, orphans } = groupByCategory(links, cats.data, (l) => l.categoryId);
+  const Grid = ({ items }: { items: GovLink[] }) => (
+    <div className={`mt-3 grid gap-3 sm:grid-cols-2 ${wide ? 'lg:grid-cols-3' : '2xl:grid-cols-3'}`}>
+      {items.map((l) => <PortalTile key={l.id} link={l} />)}
+    </div>
+  );
   return (
     <div className="space-y-8">
       {locked && (
@@ -85,18 +88,24 @@ export function PortalGroups({ links: all, wide }: { links: GovLink[]; wide?: bo
           <Link to="/login" state={{ from: '/app/portals' }} className={buttonClass('primary', 'sm')}>ಪ್ರವೇಶ · Log in</Link>
         </div>
       )}
-      {GROUPS.map((g) => {
-        const items = links.filter((l) => (l.category ?? 'OTHER') === g.key);
-        if (!items.length) return null;
-        return (
-          <section key={g.key}>
-            <h2 className="font-display text-lg text-navy-900">{g.kn} · <span className="text-slate2">{g.en}</span></h2>
-            <div className={`mt-3 grid gap-3 sm:grid-cols-2 ${wide ? 'lg:grid-cols-3' : '2xl:grid-cols-3'}`}>
-              {items.map((l) => <PortalTile key={l.id} link={l} />)}
+      {groups.map((g) => (
+        <section key={g.cat.id}>
+          <h2 className="font-display text-lg text-navy-900">{g.cat.nameKn}{g.cat.nameEn && <span className="text-slate2"> · {g.cat.nameEn}</span>}</h2>
+          {g.direct.length > 0 && <Grid items={g.direct} />}
+          {g.subs.map((s) => (
+            <div key={s.cat.id} className="mt-5 border-l-4 border-gold-400 pl-4">
+              <h3 className="font-medium text-navy-800">{s.cat.nameKn}{s.cat.nameEn && <span className="text-slate2"> · {s.cat.nameEn}</span>}</h3>
+              <Grid items={s.items} />
             </div>
-          </section>
-        );
-      })}
+          ))}
+        </section>
+      ))}
+      {orphans.length > 0 && (
+        <section>
+          <h2 className="font-display text-lg text-navy-900">ಇತರೆ <span className="text-slate2">· Other</span></h2>
+          <Grid items={orphans} />
+        </section>
+      )}
       <p className="text-xs text-slate2">
         ↗ ಅಧಿಕೃತ ಸರ್ಕಾರಿ ತಾಣಗಳು ಹೊಸ ಟ್ಯಾಬ್‌ನಲ್ಲಿ ತೆರೆಯುತ್ತವೆ · Official government sites open in a new tab. Always check the
         address ends in <b>.gov.in</b> before entering a citizen’s details.

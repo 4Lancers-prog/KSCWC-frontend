@@ -29,6 +29,7 @@ export const Icons = {
   alert: () => (<Svg><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16h.01" /></Svg>),
   landmark: () => (<Svg><path d="M3 21h18" /><path d="M5 21V10M9 21V10M15 21V10M19 21V10" /><path d="M2 10 12 3l10 7z" /></Svg>),
   external: () => (<Svg strokeWidth={2}><path d="M14 4h6v6" /><path d="M20 4 10 14" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></Svg>),
+  home: () => (<Svg><path d="m3 10 9-7 9 7" /><path d="M5 9v11a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9" /></Svg>),
   lock: () => (<Svg strokeWidth={2}><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></Svg>),
   chevron: () => (<Svg strokeWidth={2.25}><path d="m9 6 6 6-6 6" /></Svg>),
 };

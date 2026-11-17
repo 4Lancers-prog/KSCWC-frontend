@@ -35,8 +35,9 @@ export function useTransactions(page: number) {
 export function usePaymentQr() {
   return useQuery({
     queryKey: ['payment-qr'],
-    queryFn: () => api<PaymentQr>('/payment-qr'),
-    retry: false, // 404 when not configured — don't hammer
+    // null = the council hasn't published a QR yet
+    queryFn: () => api<(PaymentQr & { configured: true }) | { configured: false }>('/payment-qr').then((r) => (r.configured ? r : null)),
+    retry: false,
   });
 }
 

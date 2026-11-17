@@ -1,7 +1,7 @@
 // public-content.api.ts — public read hooks for announcements, committees, links, documents.
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import type { CommitteeMember, GovLink, PublicAnnouncement, PublicDocument } from '@/types/entities';
+import type { Category, CategoryScope, CommitteeMember, GovLink, PublicAnnouncement, PublicDocument } from '@/types/entities';
 
 export function usePublicAnnouncements() {
   return useQuery({
@@ -35,6 +35,14 @@ export function usePublicDocuments() {
   return useQuery({
     queryKey: ['public', 'documents'],
     queryFn: () => api<{ items: PublicDocument[] }>('/public/documents').then((r) => r.items),
+    staleTime: 60_000,
+  });
+}
+
+export function useCategories(scope: CategoryScope) {
+  return useQuery({
+    queryKey: ['categories', scope],
+    queryFn: () => api<{ items: Category[] }>(`/public/categories?scope=${scope}`).then((r) => r.items),
     staleTime: 60_000,
   });
 }
