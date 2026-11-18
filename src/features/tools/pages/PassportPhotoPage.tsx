@@ -2,6 +2,7 @@
 // photos at 300 DPI with background replace/remove, crop, zoom and rotate.
 // Fully client-side; nothing is uploaded.
 import { useEffect, useRef, useState } from 'react';
+import { replaceBackground, type RGB } from '../lib/background';
 import { Button, FormField, Select, Alert } from '@/components/ui';
 import {
   validateImageFile,
@@ -73,69 +74,10 @@ export function PassportPhotoPage() {
     sctx.drawImage(base, 0, 0, src.width, src.height);
 
     if (bgMode !== 'original') {
-      const w = src.width;
-      const h = src.height;
-      const data = sctx.getImageData(0, 0, w, h);
-      const px = data.data;
-      const threshold = tolerance * tolerance * 3;
-      // average the four corners as the background reference colour
-      const corners = [0, w - 1, (h - 1) * w, (h - 1) * w + (w - 1)];
-      let sr = 0;
-      let sg = 0;
-      let sb = 0;
-      for (const c of corners) {
-        const i = c * 4;
-        sr += px[i] ?? 0;
-        sg += px[i + 1] ?? 0;
-        sb += px[i + 2] ?? 0;
-      }
-      const avgR = sr / 4;
-      const avgG = sg / 4;
-      const avgB = sb / 4;
-      const visited = new Uint8Array(w * h);
-      const stack: number[] = [];
-      const add = (x: number, y: number) => {
-        if (x < 0 || y < 0 || x >= w || y >= h) return;
-        const id = y * w + x;
-        if (visited[id]) return;
-        visited[id] = 1;
-        const i = id * 4;
-        const dr = (px[i] ?? 0) - avgR;
-        const dg = (px[i + 1] ?? 0) - avgG;
-        const db = (px[i + 2] ?? 0) - avgB;
-        if (dr * dr + dg * dg + db * db <= threshold) stack.push(id);
-      };
-      for (let x = 0; x < w; x++) {
-        add(x, 0);
-        add(x, h - 1);
-      }
-      for (let y = 0; y < h; y++) {
-        add(0, y);
-        add(w - 1, y);
-      }
-      const bg =
-        bgMode === 'white' ? '#ffffff' : bgMode === 'blue' ? '#dceeff' : bgMode === 'custom' ? customBg : null;
-      const rgb: [number, number, number] | null = bg
-        ? [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)]
-        : null;
-      while (stack.length) {
-        const id = stack.pop()!;
-        const i = id * 4;
-        const x = id % w;
-        const y = (id / w) | 0;
-        if (rgb) {
-          px[i] = rgb[0];
-          px[i + 1] = rgb[1];
-          px[i + 2] = rgb[2];
-          px[i + 3] = 255;
-        } else {
-          px[i + 3] = 0;
-        }
-        add(x - 1, y);
-        add(x + 1, y);
-        add(x, y - 1);
-        add(x, y + 1);
-      }
+      const data = sctx.getImageData(0, 0, src.width, src.height);
+      const bg = bgMode === 'white' ? '#ffffff' : bgMode === 'blue' ? '#dceeff' : bgMode === 'custom' ? customBg : null;
+      const rgb: RGB | null = bg ? [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)] : null;
+      replaceBackground(data.data, src.width, src.height, tolerance, rgb);
       sctx.putImageData(data, 0, 0);
     }
     processedRef.current = { key, canvas: src };
@@ -329,7 +271,7 @@ export function PassportPhotoPage() {
                 className="w-full accent-navy-600"
               />
               <p className="text-xs text-slate2">
-                ಸರಳ/ಒಂದೇ ಬಣ್ಣದ ಹಿನ್ನೆಲೆಗೆ ಉತ್ತಮ. ಕೂದಲಿನ ಅಂಚುಗಳನ್ನು ಪರಿಶೀಲಿಸಿ · Works best on plain backgrounds.
+                ಸರಳ/ಒಂದೇ ಬಣ್ಣದ ಹಿನ್ನೆಲೆಗೆ ಉತ್ತಮ · Works best on a plain wall. If part of the face or hair also changes, lower the sensitivity; if some background is left, raise it a little.
               </p>
             </div>
           )}

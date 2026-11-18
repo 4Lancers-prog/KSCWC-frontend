@@ -17,6 +17,9 @@ function friendlyMessage(status: number, body: ApiError): string {
   if (body.code === 'ROUTE_NOT_FOUND' || (status === 404 && raw === 'Route not found')) {
     return 'ಸರ್ವರ್ ಇನ್ನೂ ಹಳೆಯ ಆವೃತ್ತಿಯಲ್ಲಿದೆ · The server is running an older version, so this feature isn’t available yet. Admin: check the latest Railway deploy.';
   }
+  if (body.code === 'ORIGIN_NOT_ALLOWED') {
+    return 'ಈ ವೆಬ್‌ಸೈಟ್ ವಿಳಾಸವನ್ನು ಸರ್ವರ್ ಸ್ವೀಕರಿಸುತ್ತಿಲ್ಲ · The server does not accept requests from this web address yet. Admin: add it to CORS_ALLOWLIST in Railway.';
+  }
   if (status === 429) return 'ಹಲವು ಪ್ರಯತ್ನಗಳು · Too many attempts. Please wait a few minutes and try again.';
   if (status === 413) return raw || 'ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದು · The file is too large.';
   if (status >= 500 && (!raw || raw === 'Something went wrong')) {
