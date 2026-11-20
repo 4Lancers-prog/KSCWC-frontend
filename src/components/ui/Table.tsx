@@ -16,7 +16,7 @@ function labelCells(table: HTMLTableElement) {
   }
 }
 
-export function Table({ children }: { children: ReactNode }) {
+export function Table({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLTableElement>(null);
   useLayoutEffect(() => {
     const t = ref.current;
@@ -28,7 +28,7 @@ export function Table({ children }: { children: ReactNode }) {
   }, []);
   return (
     <div className="relative overflow-x-auto rounded-xl2 border border-line bg-white">
-      <table ref={ref} className="rtable w-full border-collapse text-left text-sm">{children}</table>
+      <table ref={ref} className={`rtable w-full border-collapse text-left text-sm ${className ?? ''}`}>{children}</table>
     </div>
   );
 }

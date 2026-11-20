@@ -73,20 +73,28 @@ export function UsersApprovals() {
           </div>
         ) : (
           <div className="animate-fade-in">
-            <Table>
+            <Table className="lg:table-fixed">
+              <colgroup>
+                <col className="lg:w-[15%]" />
+                <col className="lg:w-[17%]" />
+                <col className="lg:w-[26%]" />
+                <col className="lg:w-[12%]" />
+                <col className="lg:w-[12%]" />
+                <col className="lg:w-[18%]" />
+              </colgroup>
               <thead><tr><Th>ಹೆಸರು · Name</Th><Th>ಸಂಪರ್ಕ · Contact</Th><Th>ಕೇಂದ್ರ · Centre</Th><Th>ನೋಂದಣಿ · Registered</Th><Th>ಸ್ಥಿತಿ</Th><Th>ಕ್ರಿಯೆಗಳು</Th></tr></thead>
               <tbody>
                 {data.items.map((u) => (
-                  <tr key={u.id}>
-                    <Td className="text-navy-900">
+                  <tr key={u.id} className="[&>td]:align-top">
+                    <Td className="break-words text-navy-900">
                       {u.fullName}
                       {u.role !== 'USER' && <div className="text-xs font-semibold text-navy-600">{u.role}</div>}
                     </Td>
-                    <Td>
+                    <Td className="break-words">
                       {u.phoneNormalized}
-                      {u.emailNormalized && <div className="text-xs">{u.emailNormalized}</div>}
+                      {u.emailNormalized && <div className="break-words text-xs">{u.emailNormalized}</div>}
                     </Td>
-                    <Td>
+                    <Td className="break-words">
                       <span className="flex items-start gap-2">
                         {u.logoUrl && <img src={u.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-white object-contain" />}
                         <span>
@@ -110,7 +118,7 @@ export function UsersApprovals() {
                         </span>
                       </span>
                     </Td>
-                    <Td className="whitespace-nowrap">{formatDate(u.createdAt)}</Td>
+                    <Td className="text-xs">{formatDate(u.createdAt)}</Td>
                     <Td>
                       <StatusBadge label={statusLabel[u.accountStatus]} tone={statusTone[u.accountStatus]} />
                       {u.rejectedReason && u.accountStatus !== 'ACTIVE' && (
