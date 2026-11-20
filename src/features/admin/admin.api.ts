@@ -44,6 +44,9 @@ export interface AdminUser {
   aadhaarMasked?: string | null;
   panMasked?: string | null;
   logoUrl?: string | null;
+  registrationPaymentUtr?: string | null;
+  registrationPaymentAmountPaise?: number | null;
+  registrationPaymentProofUrl?: string | null;
 }
 export function useAdminUsers(params: { status?: string; search?: string; page: number }) {
   const qs = new URLSearchParams({ page: String(params.page), limit: '20' });

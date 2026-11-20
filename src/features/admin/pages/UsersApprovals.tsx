@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { Button, Input, Select, Table, Th, Td, Pagination, Spinner } from '@/components/ui';
 import { StatusBadge } from '@/components/layout/StatusBadge';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatPaise } from '@/lib/format';
 import { useAdminUsers, useUserAction, type AdminUser } from '../admin.api';
+
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
 import { ReasonDialog } from '../components/ReasonDialog';
 import { DevicesDialog } from '../components/DevicesDialog';
 import { ResetLinkDialog } from '../components/ResetLinkDialog';
@@ -92,6 +94,19 @@ export function UsersApprovals() {
                           {u.cscId && <span className="block text-xs">CSC ID: {u.cscId}</span>}
                           {u.aadhaarMasked && <span className="block text-xs">ಆಧಾರ್: {u.aadhaarMasked}</span>}
                           {u.panMasked && <span className="block text-xs">PAN: {u.panMasked}</span>}
+                          {(u.registrationPaymentUtr || u.registrationPaymentAmountPaise || u.registrationPaymentProofUrl) && (
+                            <span className="mt-1 block rounded-md bg-mist px-2 py-1 text-xs">
+                              <span className="font-semibold text-navy-800">ಪಾವತಿ · Payment</span>
+                              {u.registrationPaymentAmountPaise != null && (
+                                <span className="block">{formatPaise(u.registrationPaymentAmountPaise)}</span>
+                              )}
+                              {u.registrationPaymentUtr && <span className="block">UTR: {u.registrationPaymentUtr}</span>}
+                              {u.registrationPaymentProofUrl && (
+                                <a href={`${API_BASE}${u.registrationPaymentProofUrl}`} target="_blank" rel="noreferrer"
+                                  className="link font-medium text-navy-600">ರಸೀದಿ ನೋಡಿ · View screenshot</a>
+                              )}
+                            </span>
+                          )}
                         </span>
                       </span>
                     </Td>
