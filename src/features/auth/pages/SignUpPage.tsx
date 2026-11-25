@@ -18,7 +18,7 @@ import { L, H } from '@/i18n';
 import type { SessionUser } from '@/types/api';
 
 // Step-1 fields we validate before moving on to payment.
-const STEP1_FIELDS = ['fullName', 'phone', 'email', 'centreName', 'cscId', 'aadhaar', 'pan', 'password', 'confirm'] as const;
+const STEP1_FIELDS = ['fullName', 'phone', 'email', 'centreName', 'cscId', 'pincode', 'aadhaar', 'pan', 'password', 'confirm'] as const;
 
 interface Scanner {
   configured: boolean;
@@ -68,9 +68,42 @@ export function SignUpPage() {
   const panReg = register('pan');
   const aadhaarOk = !aadhaarProblem(watch('aadhaar') ?? '');
   const panOk = !panProblem(watch('pan') ?? '');
-  const [logo, setLogo] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [aadhaarDoc, setAadhaarDoc] = useState<File | null>(null);
+  const [aadhaarDocName, setAadhaarDocName] = useState<string | null>(null);
+  const [panDoc, setPanDoc] = useState<File | null>(null);
+  const [panDocName, setPanDocName] = useState<string | null>(null);
+  const [shopPhoto, setShopPhoto] = useState<File | null>(null);
+  const [shopPhotoPreview, setShopPhotoPreview] = useState<string | null>(null);
+  const [gps, setGps] = useState<{ lat: number; lng: number; acc: number } | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<'idle' | 'locating' | 'ok' | 'error'>('idle');
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const confirmPw = watch('confirm') ?? '';
+
+  // Capture the shop's GPS location from the browser (asked for alongside the shop photo).
+  const captureLocation = () => {
+    if (!('geolocation' in navigator)) {
+      setGpsStatus('error');
+      setGpsError('ಈ ಸಾಧನದಲ್ಲಿ ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ · Location isn’t available on this device');
+      return;
+    }
+    setGpsStatus('locating');
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
+        setGpsStatus('ok');
+      },
+      (err) => {
+        setGpsStatus('error');
+        setGpsError(
+          err.code === err.PERMISSION_DENIED
+            ? 'ಸ್ಥಳ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ — ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಅನುಮತಿಸಿ · Location permission denied — allow it in your browser'
+            : 'ಸ್ಥಳ ಪಡೆಯಲಾಗಲಿಲ್ಲ · Couldn’t get location',
+        );
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
 
   // Step 1 → 2: only advance once the account fields are valid.
   const goToPayment = async () => {
@@ -98,17 +131,25 @@ export function SignUpPage() {
     }
 
     try {
-      // sent as a form so the optional centre logo + payment screenshot can travel with it
+      // sent as a form so the shop photo + payment screenshot can travel with it
       const fd = new FormData();
       fd.append('fullName', values.fullName);
       fd.append('phone', values.phone);
       if (values.email) fd.append('email', values.email);
       if (values.centreName) fd.append('centreName', values.centreName);
       if (values.cscId) fd.append('cscId', values.cscId);
+      fd.append('pincode', values.pincode);
       fd.append('aadhaar', aadhaarDigits(values.aadhaar));
       fd.append('pan', formatPan(values.pan));
       fd.append('password', values.password);
-      if (logo) fd.append('logo', await shrinkImage(logo, 512));
+      if (aadhaarDoc) fd.append('aadhaarDoc', await shrinkImage(aadhaarDoc, 1600));
+      if (panDoc) fd.append('panDoc', await shrinkImage(panDoc, 1600));
+      if (shopPhoto) fd.append('shopPhoto', await shrinkImage(shopPhoto, 1280));
+      if (gps) {
+        fd.append('shopLat', String(gps.lat));
+        fd.append('shopLng', String(gps.lng));
+        fd.append('shopGpsAccuracy', String(Math.round(gps.acc)));
+      }
 
       if (utr) fd.append('paymentUtr', utr);
       const amt = Number(payAmount);
@@ -188,6 +229,13 @@ export function SignUpPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
+            <FormField id="pincode" label="ಪಿನ್ ಕೋಡ್ · PIN code" helper="6-digit postal PIN code of your centre" error={errors.pincode?.message} required>
+              <Input id="pincode" inputMode="numeric" autoComplete="postal-code" placeholder="560001" maxLength={6}
+                invalid={!!errors.pincode} {...register('pincode')} />
+            </FormField>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <FormField id="aadhaar" label="ಆಧಾರ್ ಸಂಖ್ಯೆ" helper="Aadhaar number (12 digits) — stored securely, shown masked" error={errors.aadhaar?.message}
               hint={aadhaarOk ? <p className="text-xs text-emerald-700">✓ ಸರಿಯಾಗಿದೆ · Looks valid</p> : undefined} required>
               <Input id="aadhaar" inputMode="numeric" autoComplete="off" placeholder="1234 5678 9012" maxLength={14}
@@ -202,18 +250,46 @@ export function SignUpPage() {
             </FormField>
           </div>
 
-          <FormField id="logo" label="ಕೇಂದ್ರದ ಲೋಗೋ" helper="Centre logo (optional) — PNG or JPG; phone photos are resized automatically">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField id="aadhaarDoc" label="ಆಧಾರ್ ಕಾರ್ಡ್ ಫೋಟೋ · Aadhaar card" helper="Photo of your Aadhaar card — PNG or JPG">
+              <input id="aadhaarDoc" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
+                onChange={(e) => { const f = e.target.files?.[0] ?? null; setAadhaarDoc(f); setAadhaarDocName(f?.name ?? null); }}
+                className="block w-full min-w-0 rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
+              {aadhaarDocName && <p className="mt-1 truncate text-xs text-emerald-700">✓ {aadhaarDocName}</p>}
+            </FormField>
+            <FormField id="panDoc" label="ಪ್ಯಾನ್ ಕಾರ್ಡ್ ಫೋಟೋ · PAN card" helper="Photo of your PAN card — PNG or JPG">
+              <input id="panDoc" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
+                onChange={(e) => { const f = e.target.files?.[0] ?? null; setPanDoc(f); setPanDocName(f?.name ?? null); }}
+                className="block w-full min-w-0 rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
+              {panDocName && <p className="mt-1 truncate text-xs text-emerald-700">✓ {panDocName}</p>}
+            </FormField>
+          </div>
+
+          <FormField id="shopPhoto" label="ಅಂಗಡಿ ಫೋಟೋ · Shop photo" helper="Take a photo of your centre/shop — your location is captured with it">
             <div className="flex items-center gap-3">
-              {logoPreview
-                ? <img src={logoPreview} alt="" className="h-14 w-14 shrink-0 rounded-xl border border-line bg-white object-contain" />
-                : <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-line text-xs text-slate2">ಲೋಗೋ</span>}
-              <input id="logo" type="file" accept="image/png,image/jpeg,image/webp"
+              {shopPhotoPreview
+                ? <img src={shopPhotoPreview} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-line bg-white object-cover" />
+                : <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border border-dashed border-line text-[10px] text-slate2">ಫೋಟೋ</span>}
+              <input id="shopPhoto" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
                 onChange={(e) => {
                   const f = e.target.files?.[0] ?? null;
-                  setLogo(f);
-                  setLogoPreview((old) => { if (old) URL.revokeObjectURL(old); return f ? URL.createObjectURL(f) : null; });
+                  setShopPhoto(f);
+                  setShopPhotoPreview((old) => { if (old) URL.revokeObjectURL(old); return f ? URL.createObjectURL(f) : null; });
+                  if (f && gpsStatus === 'idle') captureLocation(); // grab location as soon as they add a photo
                 }}
                 className="block w-full min-w-0 rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <Button type="button" variant="secondary" size="sm" onClick={captureLocation}>
+                📍 ಸ್ಥಳ ಪಡೆಯಿರಿ · Get location
+              </Button>
+              {gpsStatus === 'locating' && <span className="text-slate2">ಸ್ಥಳ ಪಡೆಯಲಾಗುತ್ತಿದೆ… · Locating…</span>}
+              {gpsStatus === 'ok' && gps && (
+                <span className="text-emerald-700">
+                  ✓ {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)} (±{Math.round(gps.acc)}m)
+                </span>
+              )}
+              {gpsStatus === 'error' && <span className="text-danger">{gpsError}</span>}
             </div>
           </FormField>
 

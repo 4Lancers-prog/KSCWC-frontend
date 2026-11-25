@@ -44,6 +44,13 @@ export interface AdminUser {
   aadhaarMasked?: string | null;
   panMasked?: string | null;
   logoUrl?: string | null;
+  pincode?: string | null;
+  aadhaarDocUrl?: string | null;
+  panDocUrl?: string | null;
+  shopPhotoUrl?: string | null;
+  shopLat?: number | null;
+  shopLng?: number | null;
+  shopGpsAccuracy?: number | null;
   registrationPaymentUtr?: string | null;
   registrationPaymentAmountPaise?: number | null;
   registrationPaymentProofUrl?: string | null;

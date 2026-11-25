@@ -96,12 +96,41 @@ export function UsersApprovals() {
                     </Td>
                     <Td className="break-words">
                       <span className="flex items-start gap-2">
-                        {u.logoUrl && <img src={u.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-white object-contain" />}
+                        {u.shopPhotoUrl
+                          ? <a href={`${API_BASE}${u.shopPhotoUrl}`} target="_blank" rel="noreferrer" className="shrink-0" title="Shop photo">
+                              <img src={`${API_BASE}${u.shopPhotoUrl}`} alt="Shop" className="h-12 w-12 shrink-0 rounded-lg border border-line bg-white object-cover" />
+                            </a>
+                          : u.logoUrl && <img src={u.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-white object-contain" />}
                         <span>
                           {u.centreName ?? '—'}
                           {u.cscId && <span className="block text-xs">CSC ID: {u.cscId}</span>}
-                          {u.aadhaarMasked && <span className="block text-xs">ಆಧಾರ್: {u.aadhaarMasked}</span>}
-                          {u.panMasked && <span className="block text-xs">PAN: {u.panMasked}</span>}
+                          {u.pincode && <span className="block text-xs">PIN: {u.pincode}</span>}
+                          {u.aadhaarMasked && (
+                            <span className="block text-xs">
+                              ಆಧಾರ್: {u.aadhaarMasked}
+                              {u.aadhaarDocUrl && (
+                                <a href={`${API_BASE}${u.aadhaarDocUrl}`} target="_blank" rel="noreferrer"
+                                  className="link ml-1 font-medium text-navy-600">ನೋಡಿ · View</a>
+                              )}
+                            </span>
+                          )}
+                          {u.panMasked && (
+                            <span className="block text-xs">
+                              PAN: {u.panMasked}
+                              {u.panDocUrl && (
+                                <a href={`${API_BASE}${u.panDocUrl}`} target="_blank" rel="noreferrer"
+                                  className="link ml-1 font-medium text-navy-600">ನೋಡಿ · View</a>
+                              )}
+                            </span>
+                          )}
+                          {u.shopLat != null && u.shopLng != null && (
+                            <span className="mt-1 block rounded-md bg-mist px-2 py-1 text-xs">
+                              <span className="font-semibold text-navy-800">ಸ್ಥಳ · Location</span>
+                              <span className="block">{u.shopLat.toFixed(5)}, {u.shopLng.toFixed(5)}{u.shopGpsAccuracy != null ? ` (±${Math.round(u.shopGpsAccuracy)}m)` : ''}</span>
+                              <a href={`https://www.google.com/maps?q=${u.shopLat},${u.shopLng}`} target="_blank" rel="noreferrer"
+                                className="link font-medium text-navy-600">ನಕ್ಷೆಯಲ್ಲಿ ನೋಡಿ · View on map</a>
+                            </span>
+                          )}
                           {(u.registrationPaymentUtr || u.registrationPaymentAmountPaise || u.registrationPaymentProofUrl) && (
                             <span className="mt-1 block rounded-md bg-mist px-2 py-1 text-xs">
                               <span className="font-semibold text-navy-800">ಪಾವತಿ · Payment</span>
