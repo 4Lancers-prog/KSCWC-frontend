@@ -3,7 +3,7 @@
 //   2) pay the registration fee by scanning the admin-published QR and entering the transaction
 //      reference (UTR) + optional screenshot. On submit the account is created as PENDING_APPROVAL
 //      and the user is sent to the "waiting for approval" page.
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -77,6 +77,7 @@ export function SignUpPage() {
   const [gps, setGps] = useState<{ lat: number; lng: number; acc: number } | null>(null);
   const [gpsStatus, setGpsStatus] = useState<'idle' | 'locating' | 'ok' | 'error'>('idle');
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [manualLoc, setManualLoc] = useState('');
   const confirmPw = watch('confirm') ?? '';
 
   // Capture the shop's GPS location from the browser (asked for alongside the shop photo).
@@ -120,6 +121,58 @@ export function SignUpPage() {
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   };
+
+  // Parse coordinates from a pasted Google Maps link or a plain "lat, lng" string, so location
+  // can be set manually when the browser/OS blocks GPS (works the same on mobile and desktop).
+  const parseLatLng = (text: string): { lat: number; lng: number } | null => {
+    const t = text.trim();
+    let m =
+      t.match(/!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/) ||            // .../@..!3dLAT!4dLNG
+      t.match(/@(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/) ||             // .../@LAT,LNG
+      t.match(/[?&](?:q|query|ll|sll|daddr|destination)=(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/) || // ?q=LAT,LNG
+      t.match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/); // "LAT, LNG"
+    if (!m || m[1] === undefined || m[2] === undefined) return null;
+    const lat = parseFloat(m[1]);
+    const lng = parseFloat(m[2]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat, lng };
+  };
+
+  const applyManualLocation = () => {
+    const parsed = parseLatLng(manualLoc);
+    if (!parsed) {
+      setGpsStatus('error');
+      setGpsError('ಸರಿಯಾದ ಲಿಂಕ್/ನಿರ್ದೇಶಾಂಕ ಅಲ್ಲ · Paste a Google Maps link or "lat, lng"');
+      return;
+    }
+    setGps({ lat: parsed.lat, lng: parsed.lng, acc: 0 }); // acc 0 marks a manually entered point
+    setGpsStatus('ok');
+    setGpsError(null);
+  };
+
+  // Ask for location when the page opens, the way most sites do — but only when the browser
+  // hasn't already decided. If it was previously granted we capture silently; if it's still
+  // undecided ('prompt') we trigger the native permission dialog; if it was blocked we stay quiet
+  // (code can't re-prompt a blocked permission) and leave the button + manual box for the user.
+  useEffect(() => {
+    let cancelled = false;
+    const perms = navigator.permissions;
+    if (!perms || typeof perms.query !== 'function') return; // older Safari: wait for the button/gesture
+    perms
+      .query({ name: 'geolocation' as PermissionName })
+      .then((res) => {
+        if (cancelled) return;
+        if (res.state === 'granted' || res.state === 'prompt') captureLocation();
+      })
+      .catch(() => {
+        /* Permissions API unavailable — the explicit button still works */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Step 1 → 2: only advance once the account fields are valid.
   const goToPayment = async () => {
@@ -302,10 +355,31 @@ export function SignUpPage() {
               {gpsStatus === 'locating' && <span className="text-slate2">ಸ್ಥಳ ಪಡೆಯಲಾಗುತ್ತಿದೆ… · Locating…</span>}
               {gpsStatus === 'ok' && gps && (
                 <span className="text-emerald-700">
-                  ✓ {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)} (±{Math.round(gps.acc)}m)
+                  ✓ {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)} {gps.acc > 0 ? `(±${Math.round(gps.acc)}m)` : '· ನಮೂದಿಸಲಾಗಿದೆ · entered'}
                 </span>
               )}
               {gpsStatus === 'error' && <span className="text-danger">{gpsError}</span>}
+            </div>
+            {/* Manual fallback — always available, so location works even when GPS is blocked/denied. */}
+            <div className="mt-2">
+              <label htmlFor="manualLoc" className="block text-xs text-slate2">
+                GPS ಕೆಲಸ ಮಾಡದಿದ್ದರೆ Google Maps ಲಿಂಕ್ ಅಥವಾ “ಅಕ್ಷಾಂಶ, ರೇಖಾಂಶ” ಅಂಟಿಸಿ · Or paste a Google Maps link / coordinates
+              </label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  id="manualLoc"
+                  value={manualLoc}
+                  onChange={(e) => setManualLoc(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyManualLocation(); } }}
+                  placeholder="https://maps.google.com/…   ·   12.97160, 77.59460"
+                  inputMode="text"
+                  autoComplete="off"
+                  className="min-w-0 flex-1 rounded-lg border border-[#c3cfe2] bg-white px-3 py-2 text-sm"
+                />
+                <Button type="button" variant="secondary" size="sm" onClick={applyManualLocation}>
+                  ಅನ್ವಯಿಸಿ · Apply
+                </Button>
+              </div>
             </div>
           </FormField>
 
