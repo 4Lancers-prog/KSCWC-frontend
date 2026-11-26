@@ -81,27 +81,43 @@ export function SignUpPage() {
 
   // Capture the shop's GPS location from the browser (asked for alongside the shop photo).
   const captureLocation = () => {
-    if (!('geolocation' in navigator)) {
+    // Geolocation needs a secure (https) context; surface that clearly instead of a vague failure.
+    if (!('geolocation' in navigator) || (typeof window !== 'undefined' && !window.isSecureContext)) {
       setGpsStatus('error');
-      setGpsError('ಈ ಸಾಧನದಲ್ಲಿ ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ · Location isn’t available on this device');
+      setGpsError(
+        typeof window !== 'undefined' && !window.isSecureContext
+          ? 'ಸ್ಥಳಕ್ಕೆ ಸುರಕ್ಷಿತ (https) ಸಂಪರ್ಕ ಅಗತ್ಯ · Location needs a secure (https) connection'
+          : 'ಈ ಸಾಧನದಲ್ಲಿ ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ · Location isn’t available on this device',
+      );
       return;
     }
     setGpsStatus('locating');
     setGpsError(null);
+    const onOk = (pos: GeolocationPosition) => {
+      setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
+      setGpsStatus('ok');
+    };
+    const onFail = (err: GeolocationPositionError) => {
+      setGpsStatus('error');
+      setGpsError(
+        err.code === err.PERMISSION_DENIED
+          ? 'ಸ್ಥಳ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ — ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಅನುಮತಿಸಿ · Location permission denied — allow it in your browser'
+          : 'ಸ್ಥಳ ಪಡೆಯಲಾಗಲಿಲ್ಲ — ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ · Couldn’t get location — please try again',
+      );
+    };
+    // Try a precise fix first; if it times out or is unavailable (common indoors), retry once with a
+    // coarser, faster method over Wi-Fi/cell. A denied permission is not retried.
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
-        setGpsStatus('ok');
-      },
+      onOk,
       (err) => {
-        setGpsStatus('error');
-        setGpsError(
-          err.code === err.PERMISSION_DENIED
-            ? 'ಸ್ಥಳ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ — ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಅನುಮತಿಸಿ · Location permission denied — allow it in your browser'
-            : 'ಸ್ಥಳ ಪಡೆಯಲಾಗಲಿಲ್ಲ · Couldn’t get location',
-        );
+        if (err.code === err.PERMISSION_DENIED) { onFail(err); return; }
+        navigator.geolocation.getCurrentPosition(onOk, onFail, {
+          enableHighAccuracy: false,
+          timeout: 20000,
+          maximumAge: 60000,
+        });
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
   };
 
@@ -252,25 +268,25 @@ export function SignUpPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField id="aadhaarDoc" label="ಆಧಾರ್ ಕಾರ್ಡ್ ಫೋಟೋ · Aadhaar card" helper="Photo of your Aadhaar card — PNG or JPG">
-              <input id="aadhaarDoc" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
+              <input id="aadhaarDoc" type="file" accept="image/png,image/jpeg,image/webp"
                 onChange={(e) => { const f = e.target.files?.[0] ?? null; setAadhaarDoc(f); setAadhaarDocName(f?.name ?? null); }}
                 className="block w-full min-w-0 rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
               {aadhaarDocName && <p className="mt-1 truncate text-xs text-emerald-700">✓ {aadhaarDocName}</p>}
             </FormField>
             <FormField id="panDoc" label="ಪ್ಯಾನ್ ಕಾರ್ಡ್ ಫೋಟೋ · PAN card" helper="Photo of your PAN card — PNG or JPG">
-              <input id="panDoc" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
+              <input id="panDoc" type="file" accept="image/png,image/jpeg,image/webp"
                 onChange={(e) => { const f = e.target.files?.[0] ?? null; setPanDoc(f); setPanDocName(f?.name ?? null); }}
                 className="block w-full min-w-0 rounded-lg border border-[#c3cfe2] bg-white text-sm file:mr-3 file:rounded-l-lg file:border-0 file:bg-navy-50 file:px-3 file:py-2.5 file:font-semibold file:text-navy-800 hover:file:bg-navy-100" />
               {panDocName && <p className="mt-1 truncate text-xs text-emerald-700">✓ {panDocName}</p>}
             </FormField>
           </div>
 
-          <FormField id="shopPhoto" label="ಅಂಗಡಿ ಫೋಟೋ · Shop photo" helper="Take a photo of your centre/shop — your location is captured with it">
+          <FormField id="shopPhoto" label="ಅಂಗಡಿ ಫೋಟೋ · Shop photo" helper="Take or choose a photo of your centre/shop — your location is captured with it">
             <div className="flex items-center gap-3">
               {shopPhotoPreview
                 ? <img src={shopPhotoPreview} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-line bg-white object-cover" />
                 : <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border border-dashed border-line text-[10px] text-slate2">ಫೋಟೋ</span>}
-              <input id="shopPhoto" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"
+              <input id="shopPhoto" type="file" accept="image/png,image/jpeg,image/webp"
                 onChange={(e) => {
                   const f = e.target.files?.[0] ?? null;
                   setShopPhoto(f);
