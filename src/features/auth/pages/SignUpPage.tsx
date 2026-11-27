@@ -307,13 +307,13 @@ export function SignUpPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField id="aadhaar" label="ಆಧಾರ್ ಸಂಖ್ಯೆ" helper="Aadhaar number (12 digits) — stored securely, shown masked" error={errors.aadhaar?.message}
               hint={aadhaarOk ? <p className="text-xs text-emerald-700">✓ ಸರಿಯಾಗಿದೆ · Looks valid</p> : undefined} required>
-              <Input id="aadhaar" inputMode="numeric" autoComplete="off" placeholder="1234 5678 9012" maxLength={14}
+              <Input id="aadhaar" inputMode="numeric" autoComplete="off" placeholder="2345 6789 0123" maxLength={14}
                 invalid={!!errors.aadhaar} {...aadhaarReg}
                 onChange={(e) => { e.target.value = formatAadhaar(e.target.value); void aadhaarReg.onChange(e); }} />
             </FormField>
-            <FormField id="pan" label="ಪ್ಯಾನ್ ಸಂಖ್ಯೆ" helper="PAN (e.g. ABCDE1234F)" error={errors.pan?.message}
+            <FormField id="pan" label="ಪ್ಯಾನ್ ಸಂಖ್ಯೆ" helper="PAN (e.g. ABCPE1234F)" error={errors.pan?.message}
               hint={panOk ? <p className="text-xs text-emerald-700">✓ ಸರಿಯಾಗಿದೆ · Looks valid</p> : undefined} required>
-              <Input id="pan" autoComplete="off" autoCapitalize="characters" placeholder="ABCDE1234F" maxLength={10}
+              <Input id="pan" autoComplete="off" autoCapitalize="characters" placeholder="ABCPE1234F" maxLength={10}
                 invalid={!!errors.pan} {...panReg}
                 onChange={(e) => { e.target.value = formatPan(e.target.value); void panReg.onChange(e); }} />
             </FormField>
