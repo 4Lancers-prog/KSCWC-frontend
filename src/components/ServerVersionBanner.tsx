@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Alert } from '@/components/ui';
 
 /** The server version this website needs (matches API_VERSION in the backend's config/version.ts). */
-export const REQUIRED_API_VERSION = 20261118;
+export const REQUIRED_API_VERSION = 20261127;
 
 export function ServerVersionBanner() {
   const { data } = useQuery({
