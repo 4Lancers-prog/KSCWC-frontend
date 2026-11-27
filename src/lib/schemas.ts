@@ -20,7 +20,6 @@ export const registerForm = z
     phone: phoneField,
     email: z.string().trim().email('Enter a valid email').optional().or(z.literal('')),
     centreName: z.string().trim().max(160).optional().or(z.literal('')),
-    cscId: z.string().trim().max(80).optional().or(z.literal('')),
     pincode: z.string().trim().regex(/^\d{6}$/, 'Enter a 6-digit PIN code'),
     aadhaar: aadhaarField,
     pan: panField,
