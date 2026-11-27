@@ -18,7 +18,7 @@ import { L, H } from '@/i18n';
 import type { SessionUser } from '@/types/api';
 
 // Step-1 fields we validate before moving on to payment.
-const STEP1_FIELDS = ['fullName', 'phone', 'email', 'centreName', 'cscId', 'pincode', 'aadhaar', 'pan', 'password', 'confirm'] as const;
+const STEP1_FIELDS = ['fullName', 'phone', 'email', 'centreName', 'pincode', 'aadhaar', 'pan', 'password', 'confirm'] as const;
 
 interface Scanner {
   configured: boolean;
@@ -206,7 +206,6 @@ export function SignUpPage() {
       fd.append('phone', values.phone);
       if (values.email) fd.append('email', values.email);
       if (values.centreName) fd.append('centreName', values.centreName);
-      if (values.cscId) fd.append('cscId', values.cscId);
       fd.append('pincode', values.pincode);
       fd.append('aadhaar', aadhaarDigits(values.aadhaar));
       fd.append('pan', formatPan(values.pan));
@@ -288,14 +287,9 @@ export function SignUpPage() {
             </FormField>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField id="centreName" label={L.field_centre} helper={H.field_centre} error={errors.centreName?.message}>
-              <Input id="centreName" invalid={!!errors.centreName} {...register('centreName')} />
-            </FormField>
-            <FormField id="cscId" label={L.field_csc_id} helper={H.field_csc_id} error={errors.cscId?.message}>
-              <Input id="cscId" invalid={!!errors.cscId} {...register('cscId')} />
-            </FormField>
-          </div>
+          <FormField id="centreName" label={L.field_centre} helper={H.field_centre} error={errors.centreName?.message}>
+            <Input id="centreName" invalid={!!errors.centreName} {...register('centreName')} />
+          </FormField>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField id="pincode" label="ಪಿನ್ ಕೋಡ್ · PIN code" helper="6-digit postal PIN code of your centre" error={errors.pincode?.message} required>
